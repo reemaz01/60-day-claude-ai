@@ -103,7 +103,8 @@ FOCUS → PLAN → BUILD → IMPACT
 
 ### AI Personality Profile 
 
-![Profile]<img width="1203" height="1307" alt="image-day1profile" src="https://github.com/user-attachments/assets/ba396d90-1160-481e-8159-c1adeb5e7d47" />
+![Profile]<img width="1203" height="1307" alt="image-day1profile png" src="https://github.com/user-attachments/assets/5180c24d-a972-43dc-87ae-5dc471abc03b" />
+
 
 
 
