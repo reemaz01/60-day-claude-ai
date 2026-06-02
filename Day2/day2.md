@@ -107,6 +107,7 @@ Design: Clean layout, modern typography, AI-themed icons, LinkedIn-friendly, hig
 
 #Prompt Engineering 
 Prompt used:: Create an image explaining Prompt Engineering
-<img width="1254" height="1254" alt="day2 png" src="https://github.com/user-attachments/assets/3fc63b47-e67f-4e10-96be-40f75db5118f" />
+![Uploading day2.jpeg…]()
+
 
 
