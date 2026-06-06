@@ -18,13 +18,15 @@ AI Resume Optimizer
 
 ## PART 2 — FINAL RESUME (Optimized)
 
+![Profile Photo](https://github.com/reemaz01/60-day-claude-ai/raw/main/Day6/resume..png)
+
 REEMAZ JAWED
 Phone: 9876543210 | Email: reemazjaved429@gmail.com | Location: Lucknow  
 
 
 
 ### PROFESSIONAL SUMMARY  
-Motivated Computer Science Engineering student with foundational knowledge in Python programming and a strong interest in software development. Seeking internship opportunities to apply technical skills, contribute to real-world projects, and gain hands-on industry experience. Quick learner with problem-solving abilities and a commitment to continuous growth.  
+Motivated Computer Science Engineering student with foundational knowledge in Python programming and a strong interest in software development. Seeking internship opportunities to apply technical skil[...]
 
 
 ### EDUCATION  
@@ -51,11 +53,8 @@ Integral University, Lucknow | Expected Graduation: 2027
 
 ## PART 4 — KEY LEARNINGS
 
-  Formatting matters:** ATS systems fail on multi-column layouts; single-column plain text ensures parsing.  
-  Keywords drive ranking:** Expanding acronyms (e.g., MERN → MongoDB, Express.js, React, Node.js) boosts ATS matches.  
-  Professional summary is weighted:** A keyword-rich summary improves both ATS and recruiter readability.  
-  Action verbs improve impact:** Words like *Designed, Built, Implemented* outperform vague phrasing.  
-  Projects & certifications are critical:** Even small academic projects or online certificates significantly raise ATS scores.  
-
-
-
+Formatting matters:** ATS systems fail on multi-column layouts; single-column plain text ensures parsing.  
+Keywords drive ranking:** Expanding acronyms (e.g., MERN → MongoDB, Express.js, React, Node.js) boosts ATS matches.  
+Professional summary is weighted:** A keyword-rich summary improves both ATS and recruiter readability.  
+Action verbs improve impact:** Words like *Designed, Built, Implemented* outperform vague phrasing.  
+Projects & certifications are critical:** Even small academic projects or online certificates significantly raise ATS scores.
