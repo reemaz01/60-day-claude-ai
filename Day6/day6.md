@@ -18,7 +18,6 @@ AI Resume Optimizer
 
 ## PART 2 — FINAL RESUME (Optimized)
 
-![Profile Photo](https://github.com/reemaz01/60-day-claude-ai/raw/main/Day6/resume..png)
 
 REEMAZ JAWED
 Phone: 9876543210 | Email: reemazjaved429@gmail.com | Location: Lucknow  
@@ -47,9 +46,7 @@ Integral University, Lucknow | Expected Graduation: 2027
 
 
 ## PART 3 — RESUME SCREENSHOTS
-
-![Resume Screenshot]
-
+![Profile Photo](https://github.com/reemaz01/60-day-claude-ai/raw/main/Day6/resume..png)
 
 ## PART 4 — KEY LEARNINGS
 
