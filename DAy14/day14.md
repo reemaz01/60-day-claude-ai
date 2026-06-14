@@ -3,7 +3,7 @@ AI Job Red Flag Detector
 
 Overview
 
-The AI Job Red Flag Detector is a decision-support project designed to evaluate job opportunities beyond salary and brand value. Instead of relying solely on intuition, this analysis framework assesses potential risks, positive signals, hiring transparency, and long-term career value.
+The AI Job Red Flag Detector is a decision-support project designed to evaluate job opportunities beyond salary and brand value. Instead of relying solely on intuition, this analysis framework assesses multiple dimensions of opportunity quality.
 
 Using structured evaluation criteria, the tool generates an overall risk score and actionable insights to help candidates make informed career decisions.
 
@@ -120,10 +120,10 @@ Purpose:
 
  Assess the authenticity of the "real-world exposure" claim.
 
- 3. What technical skills are expected from interns during the program?
+  3. What technical skills are expected from interns during the program?
 
 Purpose:
- Understand preparation requirements and performance expectations.
+  Understand preparation requirements and performance expectations.
 
 4. Is there flexibility regarding work location or hybrid arrangements?
 Purpose:
@@ -131,7 +131,7 @@ Evaluate the practicality of relocation and work-life balance.
 
 5. What opportunities exist for conversion into full-time roles?
 Purpose:
- Measure the long-term value of the internship experience.
+  Measure the long-term value of the internship experience.
 
 Key Learnings
 
@@ -154,5 +154,10 @@ Candidates should use interviews to assess whether the opportunity aligns with t
 Final Verdict
 
 Recommendation: Proceed with Confidence.
-The Deloitte internship represents a high-quality opportunity with substantial learning and brand value. The identified concerns are manageable and can be addressed through targeted interview questions before making a final decision.
-This analysis demonstrates that informed career decisions require balancing employer reputation, practical constraints, growth potential, and personal priorities rather than relying solely on job titles or company prestige.
+The Deloitte internship represents a high-quality opportunity with substantial learning and brand value. The identified concerns are manageable and can be addressed through targeted interview questions. This analysis demonstrates that informed career decisions require balancing employer reputation, practical constraints, growth potential, and personal priorities rather than relying solely on job titles or company prestige.
+
+---
+
+## Screenshots
+
+Commit: [ce50b81](https://github.com/reemaz01/60-day-claude-ai/commit/ce50b81fb5b2e6cd6acce36f2051b7a320539f00)
