@@ -1,0 +1,107 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Prior Authorization Workflow Simulator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+body {margin:0;font-family:Arial,sans-serif;background:#e9f1fb;color:#000}
+header{background:#1e5fa3;color:#fff;padding:16px;text-align:center}
+.stats{display:flex;justify-content:space-around;padding:10px;background:#d6e6f7;font-weight:bold}
+.progress{display:flex;justify-content:space-between;padding:10px;font-size:12px}
+.progress div.active{color:#1e5fa3;font-weight:bold}
+.lanes{display:flex;gap:10px;padding:15px}
+.lane{flex:1;background:#fff;border-radius:8px;padding:10px;min-height:180px;border:2px dashed #aac7e6}
+.lane h3{text-align:center;color:#1e5fa3}
+.card{background:#1e5fa3;color:#fff;padding:10px;border-radius:6px;text-align:center}
+.panel{background:#fff;margin:15px;padding:15px;border-radius:8px}
+button{padding:8px 14px;background:#1e5fa3;color:#fff;border:none;border-radius:6px;cursor:pointer}
+.secondary{background:#555}
+.celebrate{font-size:24px;color:green;text-align:center;animation:pop .8s ease-in-out infinite alternate}
+@keyframes pop{from{transform:scale(1)}to{transform:scale(1.1)}}
+</style>
+</head>
+<body>
+<header>🩺 Prior Authorization Workflow Simulator</header>
+<div class="stats">
+<div>📅 Days: <span id="days">0</span></div>
+<div>⚡ Efficiency: <span id="eff">100</span></div>
+<div>📋 Scenario: <span id="scenario"></span></div>
+</div>
+<div class="progress" id="progress"></div>
+<div class="lanes">
+<div class="lane" id="patient"><h3>Patient</h3></div>
+<div class="lane" id="provider"><h3>Provider</h3></div>
+<div class="lane" id="payer"><h3>Payer</h3></div>
+</div>
+<div class="panel" id="panel"></div>
+<div class="panel" style="text-align:center;">
+<button onclick="restart()">🔄 Restart / New Patient</button>
+</div>
+
+<script>
+const scenarios=[
+{name:"Lumbar Spine MRI",necessity:.73},
+{name:"Elective Knee Surgery",necessity:.65},
+{name:"Specialty Medication",necessity:.8},
+{name:"Inpatient Admission",necessity:.75}
+];
+let state={};
+function restart(){
+state={step:1,days:0,efficiency:100,scenario:scenarios[Math.floor(Math.random()*scenarios.length)],outcome:null};
+document.getElementById("scenario").textContent=state.scenario.name;
+document.getElementById("days").textContent=0;
+document.getElementById("eff").textContent=100;
+renderProgress();renderCard("patient");
+showPanel("Patient intake complete. Send case to Provider.",()=>nextStep());
+}
+function renderProgress(){
+const steps=["Intake","Referral","Medical Necessity","Docs","Submitted","Decision","Resolution"];
+document.getElementById("progress").innerHTML=steps.map((s,i)=>`<div class="${i+1===state.step?'active':''}">${i+1}. ${s}</div>`).join("");
+}
+function renderCard(lane){
+["patient","provider","payer"].forEach(l=>document.getElementById(l).innerHTML=`<h3>${l.charAt(0).toUpperCase()+l.slice(1)}</h3>`);
+document.getElementById(lane).innerHTML+=`<div class="card">${state.scenario.name}</div>`;
+}
+function showPanel(text,action,btn="Continue"){
+document.getElementById("panel").innerHTML=`<p>${text}</p>${action?`<button onclick="(${action.toString()})()">${btn}</button>`:""}`;
+}
+function nextStep(){
+state.step++;state.days+=Math.floor(Math.random()*2)+1;
+document.getElementById("days").textContent=state.days;renderProgress();
+if(state.step===2){renderCard("provider");showPanel("Provider reviewing referral.",()=>nextStep());}
+if(state.step===3){const score=Math.round(state.scenario.necessity*100);showPanel(`Medical Necessity Evaluation: ${score}/100 criteria match.`,()=>nextStep());}
+if(state.step===4){showPanel("All required documents collected successfully.",()=>nextStep());}
+if(state.step===5){renderCard("payer");showPanel("Submitted to payer. Review in progress...",()=>triggerPayerDecision(),"Submit & Wait");}
+}
+function triggerPayerDecision(){
+showPanel("Payer reviewing request...");
+setTimeout(()=>{const r=Math.random();
+if(r<state.scenario.necessity){state.outcome="Approved";}
+else if(r<.9){state.outcome="Pended";}
+else{state.outcome="Denied";}
+resolveOutcome();},3000);
+}
+function resolveOutcome(){
+state.step=6;renderProgress();
+if(state.outcome==="Approved"){
+state.efficiency=Math.max(60,100-state.days);
+document.getElementById("eff").textContent=state.efficiency;
+showPanel(`<div class="celebrate">🎉 APPROVED 🎉</div><p>Total days: ${state.days}</p><p>Efficiency: ${state.efficiency}</p>`);
+}
+if(state.outcome==="Pended"){
+state.efficiency-=20;document.getElementById("eff").textContent=state.efficiency;
+showPanel("Request PENDED. Additional info required.",()=>peerToPeer(),"Peer-to-Peer Review");
+}
+if(state.outcome==="Denied"){
+state.efficiency-=30;document.getElementById("eff").textContent=state.efficiency;
+showPanel("Request DENIED.",()=>appeal(),"File Appeal");
+}
+}
+function peerToPeer(){state.days+=2;document.getElementById("days").textContent=state.days;state.outcome="Approved";resolveOutcome();}
+function appeal(){state.days+=5;document.getElementById("days").textContent=state.days;state.outcome="Approved";resolveOutcome();}
+restart();
+</script>
+</body>
+</html>
