@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Prior Authorization Story Simulator</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: #0F2442; margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* Progress bar */
+  #progress-bar-fill { transition: width 0.6s cubic-bezier(0.4,0,0.2,1); }
+
+  /* Chat feed */
+  #chat-feed { flex: 1; overflow-y: auto; padding: 20px 16px 12px; display: flex; flex-direction: column; gap: 14px; scroll-behavior: smooth; }
+  #chat-feed::-webkit-scrollbar { width: 4px; }
+  #chat-feed::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+  /* Bubble animation */
+  .bubble-wrap { animation: bubbleIn 0.35s ease both; }
+  @keyframes bubbleIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+
+  /* Narrator */
+  .narrator-line { animation: bubbleIn 0.35s ease both; }
+
+  /* Choice buttons */
+  .choice-btn { transition: all 0.18s ease; border: 1.5px solid rgba(13,148,136,0.5); }
+  .choice-btn:hover { background: rgba(13,148,136,0.18); border-color: #0D9488; transform: translateY(-1px); }
+  .choice-btn:active { transform: translateY(0); }
+  .choice-btn.selected { background: rgba(13,148,136,0.25); border-color: #0D9488; opacity: 0.7; pointer-events: none; }
+
+  /* Scene badge */
+  .scene-badge { background: linear-gradient(135deg, #0D9488, #0891B2); }
+
+  /* Flow diagram */
+  .flow-box { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 6px 14px; font-size: 12px; color: #CBD5E1; font-weight: 500; }
+  .flow-arrow { color: #0D9488; font-size: 16px; font-weight: 700; margin: 0 6px; }
+
+  /* Ref number */
+  .ref-number { font-family: monospace; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); border-radius: 4px; padding: 2px 8px; color: #34D399; font-size: 13px; }
+
+  /* Tag chips */
+  .tag-chip { display: inline-block; background: rgba(13,148,136,0.15); border: 1px solid rgba(13,148,136,0.3); border-radius: 999px; padding: 2px 10px; font-size: 11px; color: #5EEAD4; margin: 2px; }
+
+  /* Stat card */
+  .stat-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 12px 14px; }
+
+  /* Denial badge */
+  .denial-badge { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; padding: 3px 10px; color: #FCA5A5; font-size: 12px; font-weight: 600; }
+  .approval-badge { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3); border-radius: 6px; padding: 3px 10px; color: #6EE7B7; font-size: 12px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div style="background: #0A1929; border-bottom: 1px solid rgba(255,255,255,0.08);" class="flex-shrink-0">
+  <div class="px-4 pt-4 pb-3">
+    <div class="flex items-center justify-between mb-1">
+      <div>
+        <p class="text-xs text-slate-400 uppercase tracking-widest font-semibold mb-0.5">Healthcare Education</p>
+        <h1 class="text-white font-bold text-lg leading-tight">Prior Authorization Simulator</h1>
+      </div>
+      <div class="text-right">
+        <p class="text-xs text-slate-400 mb-0.5">Scene <span id="scene-num">1</span> of 8</p>
+        <p id="scene-label" class="text-teal-400 text-xs font-semibold">Doctor Visit</p>
+      </div>
+    </div>
+    <!-- Progress bar -->
+    <div class="mt-2 bg-slate-800 rounded-full h-1.5 overflow-hidden">
+      <div id="progress-bar-fill" class="h-full rounded-full" style="width: 12.5%; background: linear-gradient(90deg, #0D9488, #06B6D4);"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CHAT FEED -->
+<div id="chat-feed"></div>
+
+<!-- CHOICES -->
+<div id="choices-area" class="flex-shrink-0 px-4 pb-5 pt-2" style="background: linear-gradient(to top, #0A1929 70%, transparent); min-height: 110px;">
+  <p id="choices-label" class="text-xs text-slate-400 mb-2 text-center font-medium">What would you like to explore?</p>
+  <div id="choices-buttons" class="flex gap-2 flex-wrap justify-center"></div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+
+const SCENES = [
+  {
+    id: 1,
+    label: "Doctor Visit",
+    messages: [
+      { type: "narrator", text: "City Medical Center — Rheumatology Department" },
+      { type: "rahul", text: "My joints have been swollen and painful for months. It started in my hands, now it's spreading to my wrists. I'm having trouble doing everyday things." },
+      { type: "narrator", text: "Dr. Patel reviews Rahul's bloodwork, X-rays, and clinical history." },
+      { type: "narrator", text: "Diagnosis: Rheumatoid Arthritis (RA) — a chronic autoimmune condition causing joint inflammation." },
+      { type: "rahul", text: "What does that mean for my treatment?" },
+      { type: "priya", text: "Hi Rahul — I'm Priya, a healthcare operations specialist at the clinic. Dr. Patel has prescribed Humira (adalimumab), a biologic medication that targets the inflammation causing your symptoms. It's very effective for RA, but before you can pick it up at the pharmacy, your insurance needs to sign off." },
+      { type: "rahul", text: "Wait — so my doctor prescribes it, but my insurance can still say no?" },
+      { type: "priya", text: "Exactly. That process is called Prior Authorization, or PA. It means the insurance company (in your case, StarCare Health — an illustrative example) wants clinical proof the medication is medically necessary before they'll agree to cover it." },
+    ],
+    choices: [
+      { label: "Why can't I just pick up my prescription?", next: "2a" },
+      { label: "How long does this usually take?", next: "2b" },
+    ]
+  },
+  {
+    id: 2,
+    label: "Insurance Roadblock",
+    variants: {
+      "2a": [
+        { type: "rahul", text: "Why can't I just pick up my prescription right now?" },
+        { type: "priya", text: "Biologics like Humira cost $2,000–$5,000 per month without insurance. Your insurance won't cover that cost until they verify it's the right treatment for you. That's the checkpoint they call Prior Authorization." },
+      ],
+      "2b": [
+        { type: "rahul", text: "How long does this PA process usually take?" },
+        { type: "priya", text: "It varies. Payers have up to 72 hours for urgent cases and up to 14 days for standard requests — though in practice it often stretches longer due to documentation back-and-forth." },
+      ]
+    },
+    messages: [
+      { type: "narrator", text: "PA Request Flow — How it works at City Medical Center" },
+      { type: "flow", parts: ["🏥 Provider\n(Dr. Patel's Office)", "→", "📋 PA Request\n(Clinical Docs)", "→", "🏦 StarCare Health\n(Payer/Insurer)"] },
+      { type: "priya", text: "Dr. Patel's office submits the PA directly to StarCare Health. They send over Rahul's diagnosis (ICD-10 code M05.9 for RA), the prescription, and supporting clinical notes. The pharmacy isn't involved at this stage." },
+      { type: "rahul", text: "So no one's told CVS yet or anything like that?" },
+      { type: "priya", text: "Not yet. First, StarCare Health needs to review and approve. Once approved, that PA is saved on file — Rahul won't need to repeat this process for Humira as long as it stays valid." },
+      { type: "narrator", text: "✅ PA request filed. StarCare Health begins review." },
+    ],
+    choices: [
+      { label: "What exactly is Prior Authorization?", next: "3a" },
+      { label: "Can't Dr. Patel just call them?", next: "3b" },
+    ]
+  },
+  {
+    id: 3,
+    label: "What is PA?",
+    variants: {
+      "3a": [{ type: "rahul", text: "Can you explain Prior Authorization in plain English?" }],
+      "3b": [
+        { type: "rahul", text: "Can Dr. Patel just call StarCare Health directly?" },
+        { type: "priya", text: "She can — and sometimes it helps, especially for urgent cases. But insurers typically want formal documentation, not just a call. Let me explain what PA actually is and why it exists." },
+      ]
+    },
+    messages: [
+      { type: "priya", text: "Think of Prior Authorization as a gate. Before your insurance pays for a high-cost medication or procedure, they require clinical proof it's the right choice. It's meant to prevent unnecessary treatments and control costs." },
+      { type: "priya", text: "For conditions like RA, insurers often require 'step therapy' — meaning you try less expensive medications first (like methotrexate) before they'll approve biologics like Humira." },
+      { type: "rahul", text: "That sounds frustrating. Is it just about saving money?" },
+      { type: "priya", text: "That's a fair question. Step therapy isn't just bureaucracy — but for aggressive diagnoses, delays can genuinely affect disease progression. RA can cause permanent joint damage if not treated early and effectively." },
+      { type: "stat", icon: "📊", title: "AMA 2023 PA Survey", body: "Prior Authorization causes treatment delays in the majority of cases, according to the American Medical Association's 2023 survey of physicians." },
+      { type: "priya", text: "Physicians and patient advocates have pushed for PA reform for years. Some states now have laws requiring faster decisions. But until reform reaches your plan, PA remains a step you navigate — not skip." },
+    ],
+    choices: [
+      { label: "What does StarCare actually check?", next: "4a" },
+      { label: "What happens if the PA is rejected?", next: "4b" },
+    ]
+  },
+  {
+    id: 4,
+    label: "Insurance Review",
+    variants: {
+      "4a": [{ type: "rahul", text: "What exactly does StarCare Health look at when they review?" }],
+      "4b": [
+        { type: "rahul", text: "What happens if they say no?" },
+        { type: "priya", text: "Good question — let's walk through what they're checking first, so we can understand why a denial might happen." },
+      ]
+    },
+    messages: [
+      { type: "priya", text: "StarCare's clinical team reviews four main things. Let me walk you through each one." },
+      { type: "checklist", items: [
+        { icon: "✅", label: "Eligibility", desc: "Is Rahul an active member? Does Humira fall under his plan's covered medications?" },
+        { icon: "📄", label: "Clinical Documentation", desc: "Has Dr. Patel provided lab results, imaging, and clinical notes that support the RA diagnosis?" },
+        { icon: "🏷️", label: "ICD-10 Diagnosis Code", desc: "The code M05.9 (Rheumatoid Arthritis, unspecified) must match what's on the PA form. A mismatch = automatic denial." },
+        { icon: "💊", label: "Step Therapy History", desc: "Has Rahul tried first-line medications? If not, does Dr. Patel have documented clinical reasons for skipping them?" },
+      ]},
+      { type: "priya", text: "Step therapy documentation is the most common stumbling block. If Dr. Patel skipped methotrexate because Rahul has liver concerns, that reason must be in writing — not just in her memory." },
+      { type: "rahul", text: "This feels like a lot of paperwork for my doctor to deal with." },
+      { type: "priya", text: "It is. PA paperwork is a major burden on provider offices. That's part of why healthcare systems track PA-related metrics to look for improvement opportunities." },
+    ],
+    choices: [
+      { label: "Did StarCare approve it?", next: "5a" },
+      { label: "What's the most common reason for denial?", next: "5b" },
+    ]
+  },
+  {
+    id: 5,
+    label: "Denial",
+    variants: {
+      "5a": [{ type: "rahul", text: "So... did they approve it?" }],
+      "5b": [
+        { type: "rahul", text: "What's the most common reason PAs get denied?" },
+        { type: "priya", text: "Step therapy documentation — almost always. And that's exactly what happened here." },
+      ]
+    },
+    messages: [
+      { type: "narrator", text: "StarCare Health issues their decision." },
+      { type: "denial", code: "DENIAL — CODE: ST-MISSING", reason: "Missing step therapy documentation. No prior trial of conventional DMARDs (e.g., methotrexate) on file, and no documented clinical exception provided." },
+      { type: "rahul", text: "So I'm denied? I can't get my medication?" },
+      { type: "priya", text: "A denial is NOT permanent — it's a request for more information or documentation. Dr. Patel needs to show either that Rahul tried methotrexate, or provide a written reason why it's not appropriate for him." },
+      { type: "stat", icon: "⏱️", title: "System Burden", body: "PA denials cost physician offices 2+ staff hours to resolve per case, according to MGMA provider research. That's time taken away from patient care." },
+      { type: "rahul", text: "So what do we do now?" },
+      { type: "priya", text: "We appeal. And appeals succeed more often than people think — especially when the clinical case is strong. Let's build that appeal." },
+    ],
+    choices: [
+      { label: "Walk me through the appeal process", next: "6a" },
+      { label: "Should Rahul switch to a different medication?", next: "6b" },
+    ]
+  },
+  {
+    id: 6,
+    label: "Appeal",
+    variants: {
+      "6a": [{ type: "rahul", text: "Okay. Let's do the appeal. What do we need?" }],
+      "6b": [
+        { type: "rahul", text: "Should I just try a different medication to avoid all this?" },
+        { type: "priya", text: "That's a medical decision only Dr. Patel can make — but since she believes Humira is the right treatment, the appeal is the correct path. Let's build that case." },
+      ]
+    },
+    messages: [
+      { type: "priya", text: "Here's what Dr. Patel's office will compile for the appeal:" },
+      { type: "steps", items: [
+        { num: "1", label: "Patient History", desc: "Complete record of Rahul's RA progression, symptom timeline, and functional impact." },
+        { num: "2", label: "Lab & Imaging Records", desc: "RF factor, anti-CCP antibodies, joint X-rays showing erosion markers." },
+        { num: "3", label: "Step Therapy Exception", desc: "Dr. Patel documents that Rahul has early-aggressive RA. Early biologic use is clinically justified to prevent irreversible joint damage." },
+        { num: "4", label: "Letter of Medical Necessity", desc: "A formal letter from Dr. Patel stating why Humira is medically necessary for this specific patient at this stage." },
+        { num: "5", label: "Formal Appeal Filing", desc: "Submitted to StarCare Health's appeals department with a reference to the original denial code ST-MISSING." },
+      ]},
+      { type: "rahul", text: "This is so much more than just 'getting a prescription.'" },
+      { type: "priya", text: "It is. And that's part of why patient education matters — knowing the system helps you advocate for yourself. Many patients give up at the denial stage without realizing appeals often succeed." },
+      { type: "narrator", text: "Appeal submitted. StarCare Health has 30 days to respond (72 hours for urgent cases)." },
+    ],
+    choices: [
+      { label: "Did the appeal work?", next: "7a" },
+      { label: "What if the appeal is also denied?", next: "7b" },
+    ]
+  },
+  {
+    id: 7,
+    label: "Approval",
+    variants: {
+      "7a": [{ type: "rahul", text: "Did they approve the appeal?" }],
+      "7b": [
+        { type: "rahul", text: "What would happen if the appeal was denied too?" },
+        { type: "priya", text: "There's an external review right — a third-party independent review. But let's see what StarCare decided first." },
+      ]
+    },
+    messages: [
+      { type: "narrator", text: "StarCare Health Appeal Decision — 8 days later" },
+      { type: "approval", code: "APPROVED", detail: "PA granted for Humira (adalimumab) 40mg/0.4mL — subcutaneous injection, biweekly. Duration: 12 months." },
+      { type: "refnum", label: "PA Reference Number", value: "SC-2024-RA-049812" },
+      { type: "priya", text: "This PA is now saved on file permanently for this course of treatment. Rahul doesn't need to repeat the authorization process for each refill. The pharmacy can verify the PA using that reference number." },
+      { type: "rahul", text: "So I can finally get my medication?" },
+      { type: "priya", text: "Yes! Dr. Patel's office will send the prescription to your pharmacy along with the PA reference number. You're covered." },
+      { type: "rahul", text: "I'm relieved — but that was a lot. I had no idea this process even existed before today." },
+      { type: "priya", text: "Most patients don't — until they're in the middle of it. That's why understanding the system matters." },
+    ],
+    choices: [
+      { label: "What did Rahul learn from all this?", next: "8a" },
+      { label: "How do health systems track these problems?", next: "8b" },
+    ]
+  },
+  {
+    id: 8,
+    label: "Takeaways",
+    variants: {
+      "8a": [{ type: "rahul", text: "I want to understand what I should take away from all of this." }],
+      "8b": [
+        { type: "priya", text: "Let's look at both — what Rahul learned and how health systems track the broader problem." },
+      ]
+    },
+    messages: [
+      { type: "narrator", text: "Two Perspectives on Prior Authorization" },
+      { type: "priya", text: "Let's look at this from both the patient side and the system side." },
+      { type: "takeaway-header", text: "👦 Patient Perspective — What Rahul Learned" },
+      { type: "rahul", text: "PA isn't about questioning my doctor — it's a coverage process. A denial isn't a dead end. I can appeal, and I should." },
+      { type: "rahul", text: "Documentation matters. The more my doctor records about my treatment history and clinical reasoning, the stronger any appeal becomes." },
+      { type: "rahul", text: "Ask questions early. If a medication is prescribed, ask right away whether PA is required and what the timeline looks like." },
+      { type: "takeaway-header", text: "🏥 System Perspective — How Health Systems Track PA" },
+      { type: "priya", text: "Healthcare operations teams monitor PA performance using three key metrics:" },
+      { type: "metrics", items: [
+        { label: "Denial Rate", desc: "% of PA submissions that are initially denied. High rates signal documentation gaps or step therapy protocol mismatches.", color: "#EF4444" },
+        { label: "Appeal Rate", desc: "% of denials that are appealed. Low appeal rates may mean patients are giving up — a care access problem, not just a paperwork one.", color: "#F59E0B" },
+        { label: "Resolution Time", desc: "Average days from PA submission to final decision. Used to identify bottlenecks and measure insurer compliance with regulatory timelines.", color: "#0D9488" },
+      ]},
+      { type: "priya", text: "Systems that track these metrics can identify patterns — like a specific drug with a high denial rate — and proactively improve documentation workflows before the next patient needs that medication." },
+      { type: "narrator", text: "End of simulation. StarCare Health is used as an illustrative example throughout." },
+      { type: "stat", icon: "📚", title: "Keep Learning", body: "Prior Authorization reform is an active policy area. The AMA, AHIP, and CMS all publish resources on PA timelines, transparency requirements, and patient rights." },
+    ],
+    choices: [],
+    final: true,
+  }
+];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let currentScene = 1;
+let selectedVariant = null;
+let messageQueue = [];
+let isAnimating = false;
+
+// ─── RENDER HELPERS ──────────────────────────────────────────────────────────
+const feed = document.getElementById('chat-feed');
+
+function scrollToBottom() {
+  setTimeout(() => { feed.scrollTop = feed.scrollHeight; }, 60);
+}
+
+function createNarrator(text) {
+  const wrap = document.createElement('div');
+  wrap.className = 'narrator-line flex justify-center';
+  const inner = document.createElement('p');
+  inner.className = 'text-xs text-slate-400 italic text-center px-4 py-1 max-w-sm leading-relaxed';
+  inner.textContent = text;
+  wrap.appendChild(inner);
+  return wrap;
+}
+
+function createBubble(who, text) {
+  const isRahul = who === 'rahul';
+  const wrap = document.createElement('div');
+  wrap.className = `bubble-wrap flex items-end gap-2 ${isRahul ? '' : 'flex-row-reverse'}`;
+
+  const avatar = document.createElement('div');
+  avatar.className = 'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-base';
+  avatar.style.cssText = isRahul
+    ? 'background: rgba(99,102,241,0.2); border: 1.5px solid rgba(99,102,241,0.4);'
+    : 'background: rgba(13,148,136,0.2); border: 1.5px solid rgba(13,148,136,0.4);';
+  avatar.textContent = isRahul ? '👦' : '👧';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'max-w-xs lg:max-w-sm rounded-2xl px-4 py-2.5 text-sm leading-relaxed';
+  bubble.style.cssText = isRahul
+    ? 'background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.25); color: #E2E8F0; border-bottom-left-radius: 4px;'
+    : 'background: rgba(13,148,136,0.15); border: 1px solid rgba(13,148,136,0.25); color: #E2E8F0; border-bottom-right-radius: 4px;';
+
+  const label = document.createElement('p');
+  label.className = 'text-xs font-semibold mb-1';
+  label.style.color = isRahul ? '#A5B4FC' : '#5EEAD4';
+  label.textContent = isRahul ? 'Rahul' : 'Priya';
+  bubble.appendChild(label);
+
+  const msg = document.createElement('p');
+  msg.textContent = text;
+  bubble.appendChild(msg);
+
+  wrap.appendChild(avatar);
+  wrap.appendChild(bubble);
+  return wrap;
+}
+
+function createFlowDiagram(parts) {
+  const wrap = document.createElement('div');
+  wrap.className = 'bubble-wrap flex justify-center';
+  const inner = document.createElement('div');
+  inner.className = 'flex items-center flex-wrap gap-1 justify-center py-2';
+  parts.forEach((p, i) => {
+    if (p === '→') {
+      const arr = document.createElement('span');
+      arr.className = 'flow-arrow';
+      arr.textContent = '→';
+      inner.appendChild(arr);
+    } else {
+      const box = document.createElement('div');
+      box.className = 'flow-box text-center';
+      box.style.whiteSpace = 'pre-line';
+      box.textContent = p;
+      inner.appendChild(box);
+    }
+  });
+  wrap.appendChild(inner);
+  return wrap;
+}
+
+function createChecklist(items) {
+  const wrap = document.createElement('div');
+  wrap.className = 'bubble-wrap';
+  const card = document.createElement('div');
+  card.className = 'stat-card mx-auto w-full max-w-sm';
+  items.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'flex gap-3 items-start mb-3 last:mb-0';
+    const icon = document.createElement('span');
+    icon.className = 'text-base flex-shrink-0 mt-0.5';
+    icon.textContent = item.icon;
+    const text = document.createElement('div');
+    const lbl = document.createElement('p');
+    lbl.className = 'text-xs font-semibold text-teal-300 mb-0.5';
+    lbl.textContent = item.label;
+    const desc = document.createElement('p');
+    desc.className = 'text-xs text-slate-300 leading-relaxed';
+    desc.textContent = item.desc;
+    text.appendChild(lbl);
+    text.appendChild(desc);
+    row.appendChild(icon);
+    row.appendChild(text);
+    card.appendChild(row);
+  });
+  wrap.appendChild(card);
+  return wrap;
+}
+
+function createSteps(items) {
+  const wrap = document.createElement('div');
+  wrap.className = 'bubble-wrap';
+  const card = document.createElement('div');
+  card.className = 'mx-auto w-full max-w-sm flex flex-col gap-2';
+  items.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'flex gap-3 items-start';
+    const num = document.createElement('div');
+    num.className = 'flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white';
+    num.style.background = 'linear-gradient(135deg, #0D9488, #0891B2)';
+    num.textContent = item.num;
+    const text = document.createElement('div');
+    text.className = 'stat-card flex-1';
+    const lbl = document.createElement('p');
+    lbl.className = 'text-xs font-semibold text-teal-300 mb-0.5';
+    lbl.textContent = item.label;
+    const desc = document.createElement('p');
+    desc.className = 'text-xs text-slate-300 leading-relaxed';
+    desc.textContent = item.desc;
+    text.appendChild(lbl);
+    text.appendChild(desc);
+    row.appendChild(num);
+    row.appendChild(text);
+    card.appendChild(row);
+  });
+  wrap.appendChild(card);
+  return wrap;
+}
+
+function createStat(icon, title, body) {
+  const wrap = document.createElement('div');
+  wrap.className = 'bubble-wrap flex justify-center';
+  const card = document.createElement('div');
+  card.className = 'stat-card max-w-sm w-full';
+  card.style.borderColor = 'rgba(13,148,136,0.3)';
+  const header = document.createElement('div');
+  header.className = 'flex items-center gap-2 mb-1.5';
+  const ic = document.createElement('span');
+  ic.textContent = icon;
+  const t = document.createElement('p');
+  t.className = 'text-xs font-semibold text-teal-300';
+  t.textContent = title;
+  header.appendChild(ic);
+  header.appendChild(t);
+  const b = document.createElement('p');
+  b.className = 'text-xs text-slate-300 leading-relaxed italic';
+  b.textContent = body;
+  card.appendChild(header);
+  card.appendChild(b);
+  wrap.appendChild(card);
+  return wrap;
+}
+
+function createDenial(code, reason) {
+  const wrap = document.createElement('div');
+  wrap.className = 'bubble-wrap flex justify-center';
+  const card = document.createElement('div');
+  card.className = 'max-w-sm w-full rounded-xl p-4';
+  card.style.cssText = 'background: rgba(239,68,68,0.08); border: 1.5px solid rgba(239,68,68,0.35);';
+  const badge = document.createElement('div');
+  badge.className = 'denial-badge inline-block mb-2';
+  badge.textContent = code;
+  const r = document.createElement('p');
+  r.className = 'text-xs text-slate-300 leading-relaxed';
+  r.textContent = reason;
+  card.appendChild(badge);
+  card.appendChild(r);
+  wrap.appendChild(card);
+  return wrap;
+}
+
+function createApproval(code, detail) {
+  const wrap = document.createElement('div');
+  wrap.className = 'bubble-wrap flex justify-center';
+  const card = document.createElement('div');
+  card.className = 'max-w-sm w-full rounded-xl p-4';
+  card.style.cssText = 'background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.35);';
+  const badge = document.createElement('div');
+  badge.className = 'approval-badge inline-block mb-2';
+  badge.textContent = '✅ ' + code;
+  const r = document.createElement('p');
+  r.className = 'text-xs text-slate-300 leading-relaxed';
+  r.textContent = detail;
+  card.appendChild(badge);
+  card.appendChild(r);
+  wrap.appendChild(card);
+  return wrap;
+}
+
+function createRefNum(label, value) {
+  const wrap = document.createElement('div');
+  wrap.className = 'bubble-wrap flex justify-center';
+  const inner = document.createElement('div');
+  inner.className = 'flex items-center gap-3';
+  const lbl = document.createElement('p');
+  lbl.className = 'text-xs text-slate-400';
+  lbl.textContent = label + ':';
+  const val = document.createElement('span');
+  val.className = 'ref-number';
+  val.textContent = value;
+  inner.appendChild(lbl);
+  inner.appendChild(val);
+  wrap.appendChild(inner);
+  return wrap;
+}
+
+function createTakeawayHeader(text) {
+  const wrap = document.createElement('div');
+  wrap.className = 'narrator-line flex justify-center';
+  const inner = document.createElement('p');
+  inner.className = 'text-xs font-bold text-teal-300 text-center px-4 py-1 uppercase tracking-wider';
+  inner.textContent = text;
+  wrap.appendChild(inner);
+  return wrap;
+}
+
+function createMetrics(items) {
+  const wrap = document.createElement('div');
+  wrap.className = 'bubble-wrap';
+  const container = document.createElement('div');
+  container.className = 'mx-auto w-full max-w-sm flex flex-col gap-2';
+  items.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'stat-card';
+    card.style.borderLeft = `3px solid ${item.color}`;
+    const lbl = document.createElement('p');
+    lbl.className = 'text-xs font-semibold mb-1';
+    lbl.style.color = item.color;
+    lbl.textContent = item.label;
+    const desc = document.createElement('p');
+    desc.className = 'text-xs text-slate-300 leading-relaxed';
+    desc.textContent = item.desc;
+    card.appendChild(lbl);
+    card.appendChild(desc);
+    container.appendChild(card);
+  });
+  wrap.appendChild(container);
+  return wrap;
+}
+
+function buildElement(msg) {
+  switch (msg.type) {
+    case 'narrator': return createNarrator(msg.text);
+    case 'rahul': return createBubble('rahul', msg.text);
+    case 'priya': return createBubble('priya', msg.text);
+    case 'flow': return createFlowDiagram(msg.parts);
+    case 'checklist': return createChecklist(msg.items);
+    case 'steps': return createSteps(msg.items);
+    case 'stat': return createStat(msg.icon, msg.title, msg.body);
+    case 'denial': return createDenial(msg.code, msg.reason);
+    case 'approval': return createApproval(msg.code, msg.detail);
+    case 'refnum': return createRefNum(msg.label, msg.value);
+    case 'takeaway-header': return createTakeawayHeader(msg.text);
+    case 'metrics': return createMetrics(msg.items);
+    default: return null;
+  }
+}
+
+function appendMessage(msg) {
+  const el = buildElement(msg);
+  if (el) {
+    feed.appendChild(el);
+    scrollToBottom();
+  }
+}
+
+// ─── QUEUE SYSTEM ─────────────────────────────────────────────────────────────
+function drainQueue() {
+  if (messageQueue.length === 0) { isAnimating = false; return; }
+  isAnimating = true;
+  const msg = messageQueue.shift();
+  appendMessage(msg);
+  const delay = msg.type === 'narrator' || msg.type === 'takeaway-header' ? 300
+    : msg.type === 'rahul' || msg.type === 'priya' ? 700
+    : 400;
+  setTimeout(drainQueue, delay);
+}
+
+function enqueueMessages(msgs, onDone) {
+  const pending = [...msgs];
+  function next() {
+    if (pending.length === 0) { if (onDone) onDone(); return; }
+    const msg = pending.shift();
+    appendMessage(msg);
+    const delay = msg.type === 'narrator' || msg.type === 'takeaway-header' ? 300
+      : msg.type === 'rahul' || msg.type === 'priya' ? 750
+      : 500;
+    setTimeout(next, delay);
+  }
+  next();
+}
+
+// ─── CHOICES ─────────────────────────────────────────────────────────────────
+function renderChoices(choices, final) {
+  const area = document.getElementById('choices-buttons');
+  const label = document.getElementById('choices-label');
+  area.innerHTML = '';
+
+  if (final) {
+    label.textContent = '🎉 You\'ve completed the simulation!';
+    const restart = document.createElement('button');
+    restart.className = 'choice-btn px-4 py-2 rounded-full text-sm text-teal-300 font-medium cursor-pointer';
+    restart.style.background = 'rgba(13,148,136,0.1)';
+    restart.textContent = '↩ Restart Simulation';
+    restart.onclick = () => { currentScene = 1; selectedVariant = null; feed.innerHTML = ''; startScene(1, null); };
+    area.appendChild(restart);
+    return;
+  }
+
+  label.textContent = 'What would you like to explore?';
+  choices.forEach(choice => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn px-4 py-2 rounded-full text-sm text-slate-200 font-medium cursor-pointer';
+    btn.style.background = 'rgba(255,255,255,0.04)';
+    btn.textContent = choice.label;
+    btn.onclick = () => {
+      // Mark selected
+      area.querySelectorAll('.choice-btn').forEach(b => b.classList.add('selected'));
+      // Show chosen message in feed as echo
+      const echoVariant = choice.next;
+      startScene(currentScene + 1, echoVariant);
+    };
+    area.appendChild(btn);
+  });
+}
+
+function clearChoices() {
+  document.getElementById('choices-buttons').innerHTML = '';
+  document.getElementById('choices-label').textContent = '';
+}
+
+// ─── SCENE RUNNER ─────────────────────────────────────────────────────────────
+function updateHeader(sceneId, label) {
+  document.getElementById('scene-num').textContent = sceneId;
+  document.getElementById('scene-label').textContent = label;
+  document.getElementById('progress-bar-fill').style.width = (sceneId / 8 * 100) + '%';
+}
+
+function startScene(sceneIdx, variantKey) {
+  const scene = SCENES[sceneIdx - 1];
+  if (!scene) return;
+  currentScene = sceneIdx;
+  updateHeader(scene.id, scene.label);
+  clearChoices();
+
+  // Build messages: variant first, then main
+  let msgs = [];
+  if (variantKey && scene.variants && scene.variants[variantKey]) {
+    msgs = [...scene.variants[variantKey], ...scene.messages];
+  } else {
+    msgs = [...scene.messages];
+  }
+
+  enqueueMessages(msgs, () => {
+    if (scene.final) {
+      renderChoices([], true);
+    } else {
+      renderChoices(scene.choices, false);
+    }
+  });
+}
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+startScene(1, null);
+</script>
+</body>
+</html>
