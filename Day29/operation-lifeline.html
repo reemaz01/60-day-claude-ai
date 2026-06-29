@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Operation Lifeline: Supply Chain Crisis Lab</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0d12;
+    --bg2: #111520;
+    --bg3: #181d2a;
+    --bg4: #1e2435;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --text: #e8eaf0;
+    --text2: #9ba3b8;
+    --text3: #5c647a;
+    --accent: #4f8ef7;
+    --accent2: #3d7aef;
+    --green: #34d399;
+    --red: #f87171;
+    --amber: #fbbf24;
+    --purple: #a78bfa;
+    --cyan: #22d3ee;
+    --pink: #f472b6;
+    --radius: 12px;
+    --radius2: 8px;
+    --radius3: 6px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    --shadow2: 0 2px 12px rgba(0,0,0,0.3);
+  }
+  html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+  #root { min-height: 100vh; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+  @keyframes barFill { from { width: 0%; } to { width: var(--target-width); } }
+  @keyframes countUp { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .fade-in { animation: fadeIn 0.5s ease forwards; }
+  .slide-in { animation: slideIn 0.4s ease forwards; }
+  .count-up { animation: countUp 0.6s ease forwards; }
+  button { cursor: pointer; font-family: inherit; transition: all 0.2s ease; }
+  button:active { transform: scale(0.97); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const pick = arr => arr[rand(0, arr.length - 1)];
+const pickN = (arr, n) => { const s = [...arr].sort(() => Math.random() - 0.5); return s.slice(0, n); };
+const clamp = (v, min, max) => Math.min(Math.max(v, min), max);
+
+const COMPANIES = [
+  { industry: 'Consumer Electronics', icon: '💻', color: '#4f8ef7' },
+  { industry: 'Automotive Parts', icon: '🚗', color: '#f87171' },
+  { industry: 'Pharmaceuticals', icon: '💊', color: '#34d399' },
+  { industry: 'Apparel & Fashion', icon: '👗', color: '#f472b6' },
+  { industry: 'Food & Beverage', icon: '🥤', color: '#fbbf24' },
+  { industry: 'Industrial Equipment', icon: '⚙️', color: '#a78bfa' },
+  { industry: 'Aerospace Components', icon: '✈️', color: '#22d3ee' },
+  { industry: 'Retail & E-commerce', icon: '🛒', color: '#fb923c' },
+];
+const COMPANY_NAMES = ['NexaCore','VenturaTech','OmegaFlow','PrismOps','StellarChain','HelixGroup','ApexGlobal','TitanSupply','NovaLinks','QuantumBridge'];
+const COUNTRIES = ['USA','Germany','China','Japan','Brazil','India','Mexico','Vietnam','South Korea','Netherlands','UK','Canada'];
+const CRISES = [
+  { type: 'Factory Fire', icon: '🔥', color: '#f87171', urgency: 'CRITICAL', description: 'Your primary manufacturing facility in Shenzhen has caught fire. 60% of production capacity is offline. Emergency personnel are on site but full restoration will take weeks.', impact: 'Production halted, 40% inventory lost, delivery delays imminent, insurance claim initiated.' },
+  { type: 'Supplier Bankruptcy', icon: '💸', color: '#fbbf24', urgency: 'HIGH', description: 'Your largest raw material supplier has filed for bankruptcy overnight. They supply 45% of your critical components. Their warehouses are frozen by court order.', impact: 'Critical component shortage in 2 weeks, $8M in prepaid orders at risk, 3 alternative suppliers exist but have long lead times.' },
+  { type: 'Port Strike', icon: '⚓', color: '#f472b6', urgency: 'HIGH', description: 'Dockworkers at the Port of Los Angeles have declared an indefinite strike. 30% of your inbound shipments route through this port. Cargo ships are anchored offshore.', impact: 'Inbound shipments delayed 3-6 weeks, downstream production scheduled to start in 9 days, rerouting costs are significant.' },
+  { type: 'Cyberattack', icon: '💻', color: '#a78bfa', urgency: 'CRITICAL', description: 'Ransomware has encrypted your ERP and warehouse management systems. Attackers demand $2M in cryptocurrency. Operations are running on manual processes.', impact: 'Order processing stopped, inventory visibility lost, customer service unable to track shipments, IT team working around the clock.' },
+  { type: 'Major Flood', icon: '🌊', color: '#22d3ee', urgency: 'HIGH', description: 'Unprecedented flooding in Thailand has submerged two of your key supplier\'s facilities. The flood waters are expected to remain for 10-14 days.', impact: 'Sub-tier supplier disruption, 35% of component flow at risk, logistics routes through the region impassable.' },
+  { type: 'Raw Material Shortage', icon: '⛏️', color: '#fb923c', urgency: 'MEDIUM', description: 'Global demand spike and mining disruptions have caused a 60% price surge and shortage of lithium carbonate — a key material in your products. Spot market inventory is nearly depleted.', impact: 'Production costs up sharply, 6-week supply buffer only, competitors scrambling for same materials.' },
+  { type: 'Political Conflict', icon: '⚠️', color: '#fbbf24', urgency: 'HIGH', description: 'Escalating trade tensions have resulted in sudden 35% tariffs on imports from your primary manufacturing country. Customs is holding 200+ containers.', impact: 'Landed cost increases dramatically, customs clearance halted, $15M in goods stuck in transit, contractual delivery obligations at risk.' },
+  { type: 'Shipping Delay', icon: '🚢', color: '#4f8ef7', urgency: 'MEDIUM', description: 'A critical container vessel carrying your Q4 peak season inventory has been rerouted due to geopolitical tensions in the Red Sea. The new route adds 22 days to transit time.', impact: 'Q4 peak season inventory arriving too late, air freight costs prohibitive at scale, customer pre-orders already live.' },
+];
+const ACTIONS = [
+  { id: 'emergency_suppliers', label: 'Activate Emergency Suppliers', icon: '🔗', cost: -15, inventory: +10, profit: -12, speed: +8, satisfaction: +10, description: 'Engage backup suppliers at premium prices. Fast but expensive. Keeps inventory flowing.' },
+  { id: 'air_freight', label: 'Switch to Air Freight', icon: '✈️', cost: -20, inventory: +5, profit: -18, speed: +20, satisfaction: +15, description: 'Air freight is 4-6x more expensive than sea but dramatically cuts transit time.' },
+  { id: 'inventory_rationing', label: 'Implement Inventory Rationing', icon: '📦', cost: +5, inventory: -8, profit: -5, speed: -10, satisfaction: -15, description: 'Distribute limited inventory to priority customers only. Protects key accounts but frustrates others.' },
+  { id: 'customer_comms', label: 'Proactive Customer Communication', icon: '📣', cost: -3, inventory: 0, profit: -2, speed: 0, satisfaction: +18, description: 'Get ahead of delays with honest updates. Customers forgive disruption but not surprise.' },
+  { id: 'nearshore', label: 'Nearshore Production Temporarily', icon: '🏭', cost: -12, inventory: +15, profit: -10, speed: +12, satisfaction: +8, description: 'Shift some production to closer, higher-cost facilities to restore supply faster.' },
+  { id: 'demand_pause', label: 'Pause Non-Critical Orders', icon: '⏸️', cost: +8, inventory: +12, profit: -8, speed: -5, satisfaction: -8, description: 'Buy time by deferring lower-priority orders. Preserves cash but risks customer churn.' },
+  { id: 'spot_market', label: 'Buy on Spot Market', icon: '💹', cost: -18, inventory: +20, profit: -15, speed: +5, satisfaction: +5, description: 'Purchase available inventory or materials at spot prices — expensive but immediate.' },
+  { id: 'cross_dock', label: 'Activate Cross-Dock Network', icon: '🔄', cost: -8, inventory: +8, profit: -6, speed: +15, satisfaction: +10, description: 'Reroute goods through cross-docking hubs to bypass the disrupted node and cut transit time.' },
+];
+const NEGOTIATION_ROUNDS = [
+  {
+    title: 'Opening Position',
+    context: 'You need a 90-day emergency supply contract. The supplier knows you\'re in crisis — your leverage is limited. How do you open?',
+    why: 'Your opening move sets the tone. Desperation leads to bad deals. Confidence — even when you\'re vulnerable — signals you have options.',
+    options: [
+      { label: 'Reveal full urgency, offer premium pricing', trust: +5, price: -20, lead: -5, note: 'Honest but weakens your position significantly.' },
+      { label: 'Signal interest, mention 2 other suppliers you\'re evaluating', trust: +8, price: -8, lead: -3, note: 'Creates competitive tension without lying. Smart opener.' },
+      { label: 'Lead with your company\'s long-term potential', trust: +12, price: -5, lead: +2, note: 'Future value framing — works if they buy your growth story.' },
+      { label: 'Start aggressive: demand 15% below market', trust: -10, price: +15, lead: +5, note: 'Risky — may insult them and cause them to walk.' },
+    ]
+  },
+  {
+    title: 'Price Negotiation',
+    context: 'The supplier quotes 22% above standard rates citing your urgency. This is above your budget. How do you respond?',
+    why: 'Price is rarely the only variable. Volume, payment terms, and future contracts are all chips you can play without just saying "no".',
+    options: [
+      { label: 'Accept — time is money during a crisis', trust: +5, price: -18, lead: -2, note: 'Resolves quickly but you overpay. Sets a bad precedent.' },
+      { label: 'Counter at 10% above standard — split the difference', trust: +10, price: -10, lead: 0, note: 'Classic middle-ground move. Usually successful.' },
+      { label: 'Offer faster payment (Net 7) in exchange for standard pricing', trust: +15, price: -5, lead: +3, note: 'Improves their cash flow — often more valuable than margin.' },
+      { label: 'Threaten to go to their competitor immediately', trust: -15, price: +5, lead: +8, note: 'High risk. May call your bluff and the relationship suffers.' },
+    ]
+  },
+  {
+    title: 'Lead Time Dispute',
+    context: 'The supplier says 6 weeks minimum. Your operations need material in 3.5 weeks. How do you bridge this gap?',
+    why: 'Lead time constraints are often resource allocation issues in disguise. Finding what the supplier needs can unlock faster delivery.',
+    options: [
+      { label: 'Ask what it would take to cut lead time in half', trust: +12, price: -5, lead: +15, note: 'Discovery question — often reveals solvable constraints.' },
+      { label: 'Offer to pay for dedicated production line priority', trust: +8, price: -12, lead: +12, note: 'Expensive but directly addresses the bottleneck.' },
+      { label: 'Accept 6 weeks and restructure your own production schedule', trust: +15, price: +2, lead: -8, note: 'Shows flexibility — builds trust even if operationally painful.' },
+      { label: 'Demand 3.5 weeks with penalty clauses if late', trust: -12, price: -3, lead: +5, note: 'Adversarial. May not be achievable and damages trust.' },
+    ]
+  },
+  {
+    title: 'Contract Terms',
+    context: 'Final stage. The supplier wants a 12-month exclusivity clause. You prefer flexibility. How do you close?',
+    why: 'Exclusivity limits your resilience — the very thing this crisis exposed. Protect your optionality while closing the deal.',
+    options: [
+      { label: 'Accept exclusivity — you need this deal now', trust: +20, price: +5, lead: +5, note: 'Great relationship but dangerously concentrated supply.' },
+      { label: 'Counter: 6-month review clause with renewal option', trust: +15, price: +3, lead: +3, note: 'Balanced. Gives commitment with an exit ramp.' },
+      { label: 'Decline exclusivity, offer 40% guaranteed volume instead', trust: +10, price: 0, lead: +2, note: 'Volume certainty for them, flexibility for you.' },
+      { label: 'Walk away — exclusivity is a dealbreaker', trust: -20, price: 0, lead: -10, note: 'Principled but may leave you without supply. Extreme option.' },
+    ]
+  },
+];
+const CEO_QUESTIONS = [
+  {
+    q: 'Your CFO wants to cut the emergency response budget by 30% to protect quarterly earnings. What do you do?',
+    context: 'Short-term earnings vs. long-term resilience. This is one of the most common failures in crisis management.',
+    options: [
+      { label: 'Cut the budget — shareholders come first', score: 30, feedback: 'Risk: underinvesting now often creates larger costs later.' },
+      { label: 'Maintain budget — protect operations fully', score: 80, feedback: 'Correct. Crisis spending is an investment in recovery speed.' },
+      { label: 'Cut 10%, find efficiencies within the response plan', score: 70, feedback: 'Reasonable compromise that shows fiscal discipline.' },
+      { label: 'Double the budget — go all in on recovery', score: 55, feedback: 'Commitment is right but uncapped spending lacks discipline.' },
+    ]
+  },
+  {
+    q: 'Media has caught wind of the crisis. A reporter is calling for comment. Your PR team suggests "no comment."',
+    context: 'Silence in a crisis is never neutral. It creates a vacuum that bad information fills.',
+    options: [
+      { label: 'No comment — stay silent until you have all the facts', score: 35, feedback: 'Silence signals guilt or incompetence to stakeholders.' },
+      { label: 'Issue a brief holding statement: "We\'re actively managing the situation"', score: 75, feedback: 'Buys time while showing you\'re in control.' },
+      { label: 'Full transparency: share everything including financial impact', score: 60, feedback: 'Honest but premature disclosure can spook investors and customers.' },
+      { label: 'Have the CEO do a live video update within 24 hours', score: 85, feedback: 'Proactive leadership communication is the gold standard.' },
+    ]
+  },
+  {
+    q: 'Three major enterprise customers are threatening to cancel contracts worth $40M if delivery isn\'t restored in 2 weeks.',
+    context: 'Large customer threats during crises are often negotiating positions. Your response shapes both the relationship and your internal culture.',
+    options: [
+      { label: 'Make promises you\'re not sure you can keep to retain them', score: 20, feedback: 'Broken promises do more damage than honest delays.' },
+      { label: 'Offer partial shipments with a credible recovery timeline', score: 85, feedback: 'Shows capability and integrity — usually keeps customers.' },
+      { label: 'Offer contractual penalties/credits for the delay proactively', score: 75, feedback: 'Financial accountability builds trust and shows confidence.' },
+      { label: 'Let them cancel — focus resources on other customers', score: 30, feedback: 'Losing $40M in contracts creates a bigger crisis.' },
+    ]
+  },
+  {
+    q: 'Your supply chain team wants to invest $2M in resilience upgrades immediately. Your board says "wait until the crisis is resolved."',
+    context: 'The best time to build resilience is during a crisis — when the need is visible and the learnings are fresh.',
+    options: [
+      { label: 'Wait — focus 100% on immediate recovery first', score: 40, feedback: 'Miss the organizational momentum that crises create.' },
+      { label: 'Approve $500K now for critical upgrades, defer the rest', score: 70, feedback: 'Pragmatic balance of now vs. later investment.' },
+      { label: 'Approve the full $2M — crises expose the real cost of unpreparedness', score: 85, feedback: 'Correct framing. The crisis just proved the ROI.' },
+      { label: 'Create a task force to study the investment for 90 days', score: 25, feedback: 'Analysis paralysis. The lesson depreciates quickly.' },
+    ]
+  },
+  {
+    q: 'An employee leaks internal crisis documents on social media. Legal wants to immediately terminate them.',
+    context: 'How you treat people under pressure reveals your culture — and that becomes a retention and recruitment story.',
+    options: [
+      { label: 'Immediate termination — breach of trust is absolute', score: 45, feedback: 'May be legally justified but signals fear-based culture.' },
+      { label: 'Investigate first: understand motive before acting', score: 85, feedback: 'Due process protects both the company and culture.' },
+      { label: 'Ignore it — you have bigger problems right now', score: 20, feedback: 'Unaddressed leaks escalate and signal poor governance.' },
+      { label: 'Issue an all-hands: reinforce values without naming the individual', score: 70, feedback: 'Culture-first response while investigation happens in parallel.' },
+    ]
+  },
+];
+const AI_INVESTMENTS = [
+  { id: 'forecasting', name: 'Demand Forecasting AI', icon: '📈', color: '#4f8ef7', impacts: { cost: +8, inventory: +15, profit: +12, speed: +5, satisfaction: +10 }, description: 'Predicts demand with 92% accuracy using ML models trained on sales history, seasonality, and market signals. Reduces overstock and stockouts simultaneously.', benefit: 'Reduces safety stock by 20-30%, improves fill rate by 15%' },
+  { id: 'inventory', name: 'Inventory Optimization', icon: '📦', color: '#34d399', impacts: { cost: +12, inventory: +10, profit: +15, speed: +3, satisfaction: +8 }, description: 'Dynamic reorder point calculation across all SKUs. Considers lead time variability, demand volatility, and service level targets in real time.', benefit: 'Reduces inventory carrying costs by 18-25%, cuts dead stock by 40%' },
+  { id: 'supplier_risk', name: 'Supplier Risk Monitoring', icon: '🛡️', color: '#f87171', impacts: { cost: +5, inventory: +5, profit: +8, speed: +0, satisfaction: +5 }, description: 'Continuously monitors supplier financial health, geopolitical risk, news signals, and delivery performance. Alerts you 30-60 days before a disruption hits.', benefit: 'Detects 78% of supplier failures before they impact you' },
+  { id: 'warehouse', name: 'Warehouse Vision AI', icon: '👁️', color: '#a78bfa', impacts: { cost: +6, inventory: +8, profit: +7, speed: +12, satisfaction: +6 }, description: 'Computer vision cameras track inventory movement in real time, eliminating manual cycle counts. Detects misplacements, damage, and discrepancies instantly.', benefit: 'Reduces warehouse labor by 30%, improves pick accuracy to 99.7%' },
+  { id: 'procurement', name: 'Procurement Copilot', icon: '🤝', color: '#fbbf24', impacts: { cost: +15, inventory: +3, profit: +12, speed: +5, satisfaction: +3 }, description: 'AI assistant for buyers that analyzes spend data, suggests optimal vendors, drafts negotiation strategies, and flags contract risks automatically.', benefit: 'Reduces procurement cycle time by 45%, saves 8-12% on unit costs' },
+];
+
+function generateCompany() {
+  const base = pick(COMPANIES);
+  return {
+    name: pick(COMPANY_NAMES),
+    industry: base.industry,
+    icon: base.icon,
+    color: base.color,
+    revenue: `$${rand(80, 950)}M`,
+    factories: rand(2, 12),
+    warehouses: rand(4, 22),
+    suppliers: rand(15, 200),
+    inventoryDays: rand(18, 90),
+    leadTime: `${rand(3, 16)} weeks`,
+    countries: pickN(COUNTRIES, rand(3, 7)),
+    employees: `${rand(500, 15000).toLocaleString()}`,
+  };
+}
+function generateCrisis() {
+  const c = pick(CRISES);
+  return { ...c, financialRisk: `$${rand(5, 80)}M`, timeWindow: `${rand(5, 21)} days` };
+}
+
+// ---- Components ----
+
+function Btn({ children, onClick, style = {}, variant = 'primary', disabled = false }) {
+  const base = {
+    border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '15px',
+    padding: '12px 24px', cursor: disabled ? 'not-allowed' : 'pointer',
+    transition: 'all 0.2s ease', display: 'inline-flex', alignItems: 'center', gap: '8px',
+    opacity: disabled ? 0.5 : 1,
+  };
+  const variants = {
+    primary: { background: 'linear-gradient(135deg, #4f8ef7, #3d7aef)', color: '#fff', boxShadow: '0 2px 12px rgba(79,142,247,0.35)' },
+    secondary: { background: 'rgba(255,255,255,0.08)', color: '#e8eaf0', border: '1px solid rgba(255,255,255,0.15)' },
+    danger: { background: 'linear-gradient(135deg, #f87171, #ef4444)', color: '#fff' },
+    success: { background: 'linear-gradient(135deg, #34d399, #10b981)', color: '#fff' },
+    ghost: { background: 'transparent', color: '#9ba3b8', border: '1px solid rgba(255,255,255,0.1)' },
+  };
+  return (
+    <button style={{ ...base, ...variants[variant], ...style }} onClick={disabled ? undefined : onClick}
+      onMouseEnter={e => { if (!disabled) e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.filter = 'brightness(1.1)'; }}
+      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.filter = 'brightness(1)'; }}>
+      {children}
+    </button>
+  );
+}
+
+function Card({ children, style = {}, glow }) {
+  return (
+    <div style={{
+      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)',
+      borderRadius: '14px', padding: '20px',
+      boxShadow: glow ? `0 0 0 1px ${glow}33, 0 4px 24px rgba(0,0,0,0.3)` : '0 2px 16px rgba(0,0,0,0.25)',
+      ...style
+    }}>{children}</div>
+  );
+}
+
+function ProgressBar({ value, max = 100, color = '#4f8ef7', label, showValue = true, animated = false }) {
+  const pct = Math.round(clamp((value / max) * 100, 0, 100));
+  return (
+    <div style={{ marginBottom: '10px' }}>
+      {(label || showValue) && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px', color: '#9ba3b8' }}>
+          <span>{label}</span>
+          {showValue && <span style={{ color, fontWeight: 600 }}>{Math.round(value)}</span>}
+        </div>
+      )}
+      <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: '6px', height: '8px', overflow: 'hidden' }}>
+        <div style={{
+          height: '100%', borderRadius: '6px', background: `linear-gradient(90deg, ${color}99, ${color})`,
+          width: `${pct}%`,
+          transition: animated ? 'width 1.2s cubic-bezier(0.4,0,0.2,1)' : 'none',
+          boxShadow: `0 0 8px ${color}66`,
+        }} />
+      </div>
+    </div>
+  );
+}
+
+function Badge({ children, color = '#4f8ef7' }) {
+  return (
+    <span style={{
+      background: `${color}22`, color, border: `1px solid ${color}44`,
+      padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.5px',
+    }}>{children}</span>
+  );
+}
+
+function StatCard({ label, value, sub, color = '#4f8ef7', icon }) {
+  return (
+    <Card style={{ textAlign: 'center', padding: '18px 14px' }}>
+      {icon && <div style={{ fontSize: '24px', marginBottom: '8px' }}>{icon}</div>}
+      <div style={{ fontSize: '11px', color: '#5c647a', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>{label}</div>
+      <div style={{ fontSize: '24px', fontWeight: 700, color, marginBottom: '2px' }}>{value}</div>
+      {sub && <div style={{ fontSize: '12px', color: '#5c647a' }}>{sub}</div>}
+    </Card>
+  );
+}
+
+function SectionHeader({ step, title, subtitle }) {
+  return (
+    <div style={{ textAlign: 'center', marginBottom: '32px' }} className="fade-in">
+      <div style={{ color: '#4f8ef7', fontSize: '12px', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '8px' }}>
+        {step && `Step ${step} — `}{step ? '' : ''}{step ? title.split(' ')[0] : ''}
+      </div>
+      <h2 style={{ fontSize: '26px', fontWeight: 700, marginBottom: '10px', lineHeight: 1.2 }}>{title}</h2>
+      {subtitle && <p style={{ color: '#9ba3b8', fontSize: '15px', maxWidth: '560px', margin: '0 auto', lineHeight: 1.6 }}>{subtitle}</p>}
+    </div>
+  );
+}
+
+function WhyBox({ text }) {
+  return (
+    <div style={{ background: 'rgba(79,142,247,0.08)', border: '1px solid rgba(79,142,247,0.2)', borderRadius: '10px', padding: '14px 18px', marginBottom: '20px', fontSize: '13px', color: '#9ba3b8', lineHeight: 1.6 }}>
+      <span style={{ color: '#4f8ef7', fontWeight: 700 }}>💡 Why this matters: </span>{text}
+    </div>
+  );
+}
+
+// ---- Screens ----
+
+function WelcomeScreen({ onStart }) {
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', background: 'radial-gradient(ellipse at 50% 0%, rgba(79,142,247,0.12) 0%, transparent 60%)' }}>
+      <div style={{ textAlign: 'center', maxWidth: '680px' }} className="fade-in">
+        <div style={{ fontSize: '52px', marginBottom: '16px' }}>🌐</div>
+        <div style={{ color: '#4f8ef7', fontSize: '12px', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', marginBottom: '16px' }}>Supply Chain Crisis Lab</div>
+        <h1 style={{ fontSize: '40px', fontWeight: 800, lineHeight: 1.2, marginBottom: '20px', background: 'linear-gradient(135deg, #e8eaf0, #9ba3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          Operation Lifeline
+        </h1>
+        <p style={{ fontSize: '17px', color: '#9ba3b8', lineHeight: 1.7, marginBottom: '36px' }}>
+          Your company is in crisis. Suppliers are failing, factories are burning, and the clock is ticking. 
+          Can you make the right calls under pressure? <strong style={{ color: '#e8eaf0' }}>You have 8 decisions to save the company.</strong>
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px', marginBottom: '40px' }}>
+          {[
+            { icon: '🏭', label: 'Crisis Response', desc: 'Choose your actions wisely' },
+            { icon: '🤝', label: 'Negotiation', desc: '4-round supplier talks' },
+            { icon: '👔', label: 'CEO Decisions', desc: 'Lead under pressure' },
+            { icon: '🤖', label: 'AI Strategy', desc: 'Future-proof your ops' },
+          ].map(f => (
+            <Card key={f.label} style={{ textAlign: 'center', padding: '16px 12px' }}>
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>{f.icon}</div>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: '#e8eaf0', marginBottom: '4px' }}>{f.label}</div>
+              <div style={{ fontSize: '11px', color: '#5c647a' }}>{f.desc}</div>
+            </Card>
+          ))}
+        </div>
+        <Btn onClick={onStart} style={{ fontSize: '17px', padding: '16px 48px' }}>
+          🚀 Start Simulation
+        </Btn>
+        <p style={{ marginTop: '16px', fontSize: '12px', color: '#3a4055' }}>Every playthrough is unique — companies, crises, and outcomes are randomized</p>
+      </div>
+    </div>
+  );
+}
+
+function CompanyScreen({ company, onNext }) {
+  return (
+    <div style={{ maxWidth: '780px', margin: '0 auto', padding: '40px 20px' }}>
+      <SectionHeader step={1} title="Your Company Profile" subtitle="This is the organization you're running. Get familiar — these details shape every decision you'll make." />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '28px' }} className="fade-in">
+        <div style={{ width: '60px', height: '60px', borderRadius: '14px', background: `${company.color}22`, border: `1px solid ${company.color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px' }}>{company.icon}</div>
+        <div>
+          <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '4px' }}>{company.name} Corporation</h2>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <Badge color={company.color}>{company.industry}</Badge>
+            <Badge color="#34d399">NASDAQ Listed</Badge>
+          </div>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '20px' }} className="fade-in">
+        <StatCard label="Annual Revenue" value={company.revenue} icon="💰" color="#34d399" />
+        <StatCard label="Factories" value={company.factories} icon="🏭" color="#4f8ef7" />
+        <StatCard label="Warehouses" value={company.warehouses} icon="📦" color="#a78bfa" />
+        <StatCard label="Suppliers" value={company.suppliers} icon="🔗" color="#fbbf24" />
+        <StatCard label="Inventory Days" value={company.inventoryDays} sub="days of stock" icon="📊" color="#f472b6" />
+        <StatCard label="Lead Time" value={company.leadTime} sub="avg. supplier" icon="⏱️" color="#22d3ee" />
+        <StatCard label="Employees" value={company.employees} icon="👥" color="#fb923c" />
+      </div>
+      <Card style={{ marginBottom: '24px' }} className="fade-in">
+        <div style={{ fontSize: '13px', color: '#9ba3b8', marginBottom: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Global Footprint</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          {company.countries.map(c => (
+            <span key={c} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '4px 12px', fontSize: '13px' }}>🌍 {c}</span>
+          ))}
+        </div>
+      </Card>
+      <WhyBox text={`With ${company.inventoryDays} days of inventory and ${company.leadTime} average lead times, you have limited buffer if something goes wrong. The more countries and suppliers you have, the more exposure — and the more options. This profile shapes your vulnerability.`} />
+      <div style={{ textAlign: 'center' }}>
+        <Btn onClick={onNext}>View Your Crisis →</Btn>
+      </div>
+    </div>
+  );
+}
+
+function CrisisScreen({ company, crisis, onNext }) {
+  const urgencyColor = { CRITICAL: '#f87171', HIGH: '#fbbf24', MEDIUM: '#fb923c' }[crisis.urgency];
+  return (
+    <div style={{ maxWidth: '780px', margin: '0 auto', padding: '40px 20px' }}>
+      <SectionHeader step={2} title="Crisis Detected" subtitle="A major disruption has hit your supply chain. Read everything carefully before moving to the War Room." />
+      <Card glow={urgencyColor} style={{ marginBottom: '20px' }} className="fade-in">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ fontSize: '40px' }}>{crisis.icon}</div>
+            <div>
+              <h3 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '6px' }}>{crisis.type}</h3>
+              <Badge color={urgencyColor}>🚨 {crisis.urgency} URGENCY</Badge>
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '11px', color: '#5c647a', marginBottom: '4px' }}>FINANCIAL EXPOSURE</div>
+            <div style={{ fontSize: '22px', fontWeight: 700, color: '#f87171' }}>{crisis.financialRisk}</div>
+            <div style={{ fontSize: '12px', color: '#5c647a' }}>Decision window: {crisis.timeWindow}</div>
+          </div>
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '16px', marginBottom: '12px' }}>
+          <div style={{ fontSize: '12px', color: '#5c647a', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px', marginBottom: '8px' }}>Situation Brief</div>
+          <p style={{ lineHeight: 1.7, color: '#c8cad6', fontSize: '15px' }}>{crisis.description}</p>
+        </div>
+        <div style={{ background: `${urgencyColor}11`, border: `1px solid ${urgencyColor}33`, borderRadius: '8px', padding: '14px' }}>
+          <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '0.5px', color: urgencyColor, marginBottom: '6px' }}>⚡ BUSINESS IMPACT</div>
+          <p style={{ fontSize: '14px', color: '#9ba3b8', lineHeight: 1.6 }}>{crisis.impact}</p>
+        </div>
+      </Card>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }} className="fade-in">
+        <Card>
+          <div style={{ fontSize: '12px', color: '#5c647a', marginBottom: '8px', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>Your Vulnerability</div>
+          <ProgressBar value={company.inventoryDays} max={90} color="#fbbf24" label="Inventory Buffer" />
+          <ProgressBar value={rand(20, 75)} max={100} color="#f87171" label="Supplier Exposure" />
+          <ProgressBar value={rand(30, 80)} max={100} color="#4f8ef7" label="Network Flexibility" />
+        </Card>
+        <Card>
+          <div style={{ fontSize: '12px', color: '#5c647a', marginBottom: '8px', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>Crisis Severity Scale</div>
+          {[['Revenue at Risk', crisis.financialRisk, '#f87171'], ['Time to Act', crisis.timeWindow, '#fbbf24'], ['Suppliers Affected', `${rand(1, Math.min(5, company.suppliers))}`, '#fb923c']].map(([l, v, c]) => (
+            <div key={l} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px' }}>
+              <span style={{ color: '#9ba3b8' }}>{l}</span>
+              <span style={{ color: c, fontWeight: 600 }}>{v}</span>
+            </div>
+          ))}
+        </Card>
+      </div>
+      <WhyBox text="The clock is ticking. Every hour of indecision in a supply chain crisis costs money, trust, and options. Your goal isn't to be perfect — it's to be decisive and strategic." />
+      <div style={{ textAlign: 'center' }}>
+        <Btn onClick={onNext} variant="danger" style={{ fontSize: '16px', padding: '14px 40px' }}>
+          ⚔️ Enter the War Room
+        </Btn>
+      </div>
+    </div>
+  );
+}
+
+function WarRoomScreen({ onNext }) {
+  const [selected, setSelected] = useState([]);
+  const [revealed, setRevealed] = useState(false);
+  const [metrics, setMetrics] = useState({ cost: 50, inventory: 50, profit: 50, speed: 50, satisfaction: 50 });
+  const actions = useRef(pickN(ACTIONS, 6)).current;
+
+  const toggle = (id) => {
+    if (revealed) return;
+    setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : prev.length < 3 ? [...prev, id] : prev);
+  };
+
+  const simulate = () => {
+    const chosen = actions.filter(a => selected.includes(a.id));
+    let m = { cost: 50, inventory: 50, profit: 50, speed: 50, satisfaction: 50 };
+    chosen.forEach(a => {
+      m.cost = clamp(m.cost + a.cost, 0, 100);
+      m.inventory = clamp(m.inventory + a.inventory, 0, 100);
+      m.profit = clamp(m.profit + a.profit, 0, 100);
+      m.speed = clamp(m.speed + a.speed, 0, 100);
+      m.satisfaction = clamp(m.satisfaction + a.satisfaction, 0, 100);
+    });
+    setMetrics(m);
+    setRevealed(true);
+  };
+
+  const metricColor = v => v >= 65 ? '#34d399' : v >= 45 ? '#fbbf24' : '#f87171';
+
+  return (
+    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px' }}>
+      <SectionHeader step={3} title="War Room: Crisis Response" subtitle="Choose exactly 3 response actions. Each one has tradeoffs — read them carefully. There's no perfect answer." />
+      <WhyBox text="In a real supply chain crisis, you never have enough resources for everything. Prioritization is the skill. Pick actions that balance immediate fire-fighting with longer-term customer trust." />
+      <div style={{ background: 'rgba(79,142,247,0.08)', border: '1px solid rgba(79,142,247,0.2)', borderRadius: '10px', padding: '12px 18px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: '14px', color: '#9ba3b8' }}>Actions selected:</span>
+        <span style={{ fontSize: '18px', fontWeight: 700, color: selected.length === 3 ? '#34d399' : '#4f8ef7' }}>{selected.length} / 3</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px', marginBottom: '28px' }}>
+        {actions.map((a, i) => {
+          const isSelected = selected.includes(a.id);
+          return (
+            <div key={a.id} className="fade-in"
+              onClick={() => toggle(a.id)}
+              style={{
+                background: isSelected ? 'rgba(79,142,247,0.12)' : 'rgba(255,255,255,0.04)',
+                border: isSelected ? '1px solid rgba(79,142,247,0.5)' : '1px solid rgba(255,255,255,0.09)',
+                borderRadius: '12px', padding: '16px', cursor: revealed ? 'default' : 'pointer',
+                transition: 'all 0.2s ease',
+                transform: isSelected ? 'translateY(-2px)' : 'none',
+                opacity: !revealed && selected.length === 3 && !isSelected ? 0.5 : 1,
+                animationDelay: `${i * 0.07}s`,
+              }}
+              onMouseEnter={e => { if (!revealed && !(selected.length === 3 && !isSelected)) { e.currentTarget.style.borderColor = 'rgba(79,142,247,0.4)'; e.currentTarget.style.transform = isSelected ? 'translateY(-2px)' : 'translateY(-1px)'; }}}
+              onMouseLeave={e => { if (!revealed) { e.currentTarget.style.borderColor = isSelected ? 'rgba(79,142,247,0.5)' : 'rgba(255,255,255,0.09)'; e.currentTarget.style.transform = isSelected ? 'translateY(-2px)' : 'none'; }}}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '20px' }}>{a.icon}</span>
+                  <span style={{ fontWeight: 600, fontSize: '14px' }}>{a.label}</span>
+                </div>
+                {isSelected && <span style={{ color: '#4f8ef7', fontSize: '18px', fontWeight: 700 }}>✓</span>}
+              </div>
+              <p style={{ fontSize: '12px', color: '#9ba3b8', lineHeight: 1.6, marginBottom: '10px' }}>{a.description}</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                {[['Cost', a.cost], ['Inventory', a.inventory], ['Profit', a.profit], ['Speed', a.speed], ['Satisfaction', a.satisfaction]].map(([k, v]) => (
+                  <span key={k} style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', background: v > 0 ? 'rgba(52,211,153,0.15)' : v < 0 ? 'rgba(248,113,113,0.15)' : 'rgba(255,255,255,0.06)', color: v > 0 ? '#34d399' : v < 0 ? '#f87171' : '#9ba3b8', border: `1px solid ${v > 0 ? 'rgba(52,211,153,0.3)' : v < 0 ? 'rgba(248,113,113,0.3)' : 'rgba(255,255,255,0.1)'}` }}>
+                    {k} {v > 0 ? `+${v}` : v}
+                  </span>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {!revealed ? (
+        <div style={{ textAlign: 'center' }}>
+          <Btn onClick={simulate} disabled={selected.length !== 3} style={{ fontSize: '16px', padding: '14px 40px' }}>
+            ⚡ Simulate Consequences
+          </Btn>
+          {selected.length < 3 && <p style={{ marginTop: '12px', fontSize: '13px', color: '#5c647a' }}>Select {3 - selected.length} more action{3 - selected.length !== 1 ? 's' : ''}</p>}
+        </div>
+      ) : (
+        <div className="fade-in">
+          <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '20px', textAlign: 'center' }}>📊 Simulated Outcomes</h3>
+          <Card style={{ marginBottom: '24px' }}>
+            {[['Cost Efficiency', metrics.cost, '#34d399'], ['Inventory Level', metrics.inventory, '#4f8ef7'], ['Profit Impact', metrics.profit, '#a78bfa'], ['Delivery Speed', metrics.speed, '#22d3ee'], ['Customer Satisfaction', metrics.satisfaction, '#f472b6']].map(([label, value, color]) => (
+              <ProgressBar key={label} label={label} value={value} color={metricColor(value)} animated />
+            ))}
+          </Card>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px', marginBottom: '24px' }}>
+            {[['Cost', metrics.cost, '#34d399'], ['Inventory', metrics.inventory, '#4f8ef7'], ['Profit', metrics.profit, '#a78bfa'], ['Speed', metrics.speed, '#22d3ee'], ['Satisfaction', metrics.satisfaction, '#f472b6']].map(([l, v, c]) => (
+              <StatCard key={l} label={l} value={`${Math.round(v)}/100`} color={metricColor(v)} />
+            ))}
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <Btn onClick={() => onNext(metrics, selected.map(id => actions.find(a => a.id === id)))}>
+              Proceed to Supplier Negotiation →
+            </Btn>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NegotiationScreen({ onNext }) {
+  const [round, setRound] = useState(0);
+  const [score, setScore] = useState({ trust: 40, price: 50, lead: 40 });
+  const [history, setHistory] = useState([]);
+  const [done, setDone] = useState(false);
+
+  const choose = (opt) => {
+    const newScore = {
+      trust: clamp(score.trust + opt.trust, 0, 100),
+      price: clamp(score.price + opt.price, 0, 100),
+      lead: clamp(score.lead + opt.lead, 0, 100),
+    };
+    setScore(newScore);
+    setHistory(prev => [...prev, { round: round + 1, label: opt.label, note: opt.note }]);
+    if (round + 1 >= NEGOTIATION_ROUNDS.length) {
+      setDone(true);
+    } else {
+      setRound(r => r + 1);
+    }
+  };
+
+  const negScore = Math.round((score.trust * 0.4 + score.price * 0.35 + score.lead * 0.25));
+
+  if (done) {
+    return (
+      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '40px 20px' }} className="fade-in">
+        <SectionHeader step={4} title="Negotiation Complete" subtitle="Here's how the supplier talks concluded. Your choices compounded across all four rounds." />
+        <Card glow="#34d399" style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <div style={{ fontSize: '13px', color: '#5c647a', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Negotiation Score</div>
+          <div style={{ fontSize: '56px', fontWeight: 800, color: negScore >= 70 ? '#34d399' : negScore >= 50 ? '#fbbf24' : '#f87171', marginBottom: '8px' }} className="count-up">{negScore}</div>
+          <div style={{ fontSize: '14px', color: '#9ba3b8' }}>{negScore >= 70 ? 'Excellent deal secured' : negScore >= 50 ? 'Workable agreement reached' : 'Unfavorable terms accepted'}</div>
+        </Card>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+          <StatCard label="Supplier Trust" value={`${Math.round(score.trust)}%`} color={score.trust >= 60 ? '#34d399' : '#fbbf24'} icon="🤝" />
+          <StatCard label="Price Position" value={`${Math.round(score.price)}%`} color={score.price >= 55 ? '#34d399' : '#fbbf24'} icon="💲" />
+          <StatCard label="Lead Time" value={`${Math.round(score.lead)}%`} color={score.lead >= 55 ? '#34d399' : '#fbbf24'} icon="⏱️" />
+        </div>
+        <Card style={{ marginBottom: '24px' }}>
+          <div style={{ fontSize: '13px', color: '#5c647a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '14px' }}>Decision Log</div>
+          {history.map((h, i) => (
+            <div key={i} style={{ display: 'flex', gap: '12px', marginBottom: '12px', paddingBottom: '12px', borderBottom: i < history.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+              <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(79,142,247,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#4f8ef7', fontWeight: 700, flexShrink: 0 }}>R{h.round}</div>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '2px' }}>{h.label}</div>
+                <div style={{ fontSize: '12px', color: '#9ba3b8' }}>{h.note}</div>
+              </div>
+            </div>
+          ))}
+        </Card>
+        <div style={{ textAlign: 'center' }}>
+          <Btn onClick={() => onNext(negScore)}>Enter the CEO Boardroom →</Btn>
+        </div>
+      </div>
+    );
+  }
+
+  const r = NEGOTIATION_ROUNDS[round];
+  return (
+    <div style={{ maxWidth: '760px', margin: '0 auto', padding: '40px 20px' }}>
+      <SectionHeader step={4} title="Supplier Negotiation" subtitle="4 rounds. Every choice affects trust, price, and lead time. Think like a negotiator, not a desperate buyer." />
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '28px' }}>
+        {NEGOTIATION_ROUNDS.map((_, i) => (
+          <div key={i} style={{ width: '36px', height: '6px', borderRadius: '3px', background: i < round ? '#34d399' : i === round ? '#4f8ef7' : 'rgba(255,255,255,0.1)', transition: 'all 0.3s ease' }} />
+        ))}
+      </div>
+      <Card style={{ marginBottom: '16px' }} className="fade-in">
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
+          <Badge color="#4f8ef7">Round {round + 1} of 4</Badge>
+          <Badge color="#a78bfa">{r.title}</Badge>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+          {[['Trust', score.trust, '#34d399'], ['Price Score', score.price, '#4f8ef7'], ['Lead Time', score.lead, '#a78bfa']].map(([l, v, c]) => (
+            <div key={l} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+              <div style={{ fontSize: '10px', color: '#5c647a', marginBottom: '4px', textTransform: 'uppercase' }}>{l}</div>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: c }}>{Math.round(v)}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '14px', marginBottom: '12px' }}>
+          <p style={{ fontSize: '15px', color: '#c8cad6', lineHeight: 1.7 }}>{r.context}</p>
+        </div>
+        <WhyBox text={r.why} />
+      </Card>
+      <div style={{ display: 'grid', gap: '10px', marginBottom: '16px' }}>
+        {r.options.map((opt, i) => (
+          <div key={i} className="slide-in" style={{ animationDelay: `${i * 0.08}s`,
+            background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: '10px', padding: '16px',
+            cursor: 'pointer', transition: 'all 0.2s ease' }}
+            onClick={() => choose(opt)}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(79,142,247,0.1)'; e.currentTarget.style.borderColor = 'rgba(79,142,247,0.4)'; e.currentTarget.style.transform = 'translateX(4px)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)'; e.currentTarget.style.transform = 'none'; }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, marginBottom: '4px', fontSize: '14px' }}>{String.fromCharCode(65 + i)}. {opt.label}</div>
+                <div style={{ fontSize: '12px', color: '#9ba3b8' }}>{opt.note}</div>
+              </div>
+              <div style={{ display: 'flex', gap: '4px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                {[['T', opt.trust], ['P', opt.price], ['L', opt.lead]].map(([k, v]) => (
+                  <span key={k} style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: v > 0 ? 'rgba(52,211,153,0.15)' : v < 0 ? 'rgba(248,113,113,0.15)' : 'rgba(255,255,255,0.06)', color: v > 0 ? '#34d399' : v < 0 ? '#f87171' : '#9ba3b8' }}>
+                    {k}{v > 0 ? `+${v}` : v}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CEOScreen({ onNext }) {
+  const [current, setCurrent] = useState(0);
+  const [answers, setAnswers] = useState([]);
+  const [done, setDone] = useState(false);
+  const [selected, setSelected] = useState(null);
+
+  const choose = (opt) => {
+    setSelected(opt);
+    setTimeout(() => {
+      const newAnswers = [...answers, { q: CEO_QUESTIONS[current].q, chosen: opt }];
+      setAnswers(newAnswers);
+      setSelected(null);
+      if (current + 1 >= CEO_QUESTIONS.length) {
+        setDone(true);
+      } else {
+        setCurrent(c => c + 1);
+      }
+    }, 1200);
+  };
+
+  const totalScore = answers.reduce((sum, a) => sum + a.chosen.score, 0);
+  const leadershipScore = Math.round(totalScore / CEO_QUESTIONS.length);
+
+  if (done) {
+    return (
+      <div style={{ maxWidth: '700px', margin: '0 auto', padding: '40px 20px' }} className="fade-in">
+        <SectionHeader step={5} title="Boardroom Review" subtitle="Here's how your executive decisions scored across all five scenarios." />
+        <Card glow="#a78bfa" style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <div style={{ fontSize: '13px', color: '#5c647a', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Leadership Score</div>
+          <div style={{ fontSize: '56px', fontWeight: 800, color: leadershipScore >= 70 ? '#34d399' : leadershipScore >= 50 ? '#fbbf24' : '#f87171', marginBottom: '8px' }} className="count-up">{leadershipScore}</div>
+          <div style={{ fontSize: '14px', color: '#9ba3b8' }}>{leadershipScore >= 75 ? '🏆 Exceptional CEO-level thinking' : leadershipScore >= 60 ? '👍 Strong executive judgment' : leadershipScore >= 45 ? '⚠️ Some critical missteps' : '🔴 Leadership blind spots revealed'}</div>
+        </Card>
+        <Card style={{ marginBottom: '24px' }}>
+          {answers.map((a, i) => (
+            <div key={i} style={{ marginBottom: '16px', paddingBottom: '16px', borderBottom: i < answers.length - 1 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
+              <div style={{ fontSize: '12px', color: '#5c647a', marginBottom: '4px' }}>Q{i + 1}</div>
+              <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '6px', color: '#c8cad6' }}>{a.q.length > 80 ? a.q.slice(0, 80) + '...' : a.q}</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ fontSize: '12px', color: '#9ba3b8', flex: 1, marginRight: '10px' }}>{a.chosen.feedback}</div>
+                <Badge color={a.chosen.score >= 70 ? '#34d399' : a.chosen.score >= 50 ? '#fbbf24' : '#f87171'}>{a.chosen.score}/100</Badge>
+              </div>
+            </div>
+          ))}
+        </Card>
+        <div style={{ textAlign: 'center' }}>
+          <Btn onClick={() => onNext(leadershipScore)}>Choose AI Investments →</Btn>
+        </div>
+      </div>
+    );
+  }
+
+  const q = CEO_QUESTIONS[current];
+  return (
+    <div style={{ maxWidth: '760px', margin: '0 auto', padding: '40px 20px' }}>
+      <SectionHeader step={5} title="CEO Boardroom" subtitle="Five leadership scenarios. Every choice here reveals how you think under pressure. There are better and worse answers." />
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '28px' }}>
+        {CEO_QUESTIONS.map((_, i) => (
+          <div key={i} style={{ width: '36px', height: '6px', borderRadius: '3px', background: i < current ? '#a78bfa' : i === current ? '#4f8ef7' : 'rgba(255,255,255,0.1)', transition: 'all 0.3s' }} />
+        ))}
+      </div>
+      <Card style={{ marginBottom: '20px' }} className="fade-in">
+        <div style={{ marginBottom: '14px' }}>
+          <Badge color="#a78bfa">Scenario {current + 1} of 5</Badge>
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '8px', padding: '16px', marginBottom: '14px' }}>
+          <p style={{ fontSize: '16px', fontWeight: 600, lineHeight: 1.6 }}>{q.q}</p>
+        </div>
+        <WhyBox text={q.context} />
+      </Card>
+      <div style={{ display: 'grid', gap: '10px' }}>
+        {q.options.map((opt, i) => {
+          const isSelected = selected === opt;
+          return (
+            <div key={i} className="slide-in" style={{ animationDelay: `${i * 0.08}s`,
+              background: isSelected ? 'rgba(167,139,250,0.15)' : 'rgba(255,255,255,0.04)',
+              border: isSelected ? '1px solid rgba(167,139,250,0.5)' : '1px solid rgba(255,255,255,0.09)',
+              borderRadius: '10px', padding: '16px', cursor: selected ? 'default' : 'pointer', transition: 'all 0.2s ease' }}
+              onClick={() => !selected && choose(opt)}
+              onMouseEnter={e => { if (!selected) { e.currentTarget.style.background = 'rgba(167,139,250,0.08)'; e.currentTarget.style.borderColor = 'rgba(167,139,250,0.3)'; }}}
+              onMouseLeave={e => { if (!selected) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)'; }}}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '28px', height: '28px', borderRadius: '50%', border: `2px solid ${isSelected ? '#a78bfa' : 'rgba(255,255,255,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: isSelected ? '#a78bfa' : '#5c647a', flexShrink: 0, fontWeight: 700 }}>
+                  {isSelected ? '✓' : String.fromCharCode(65 + i)}
+                </div>
+                <span style={{ fontSize: '14px', fontWeight: isSelected ? 600 : 400 }}>{opt.label}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function AIStrategyScreen({ onNext }) {
+  const [selected, setSelected] = useState([]);
+  const [revealed, setRevealed] = useState(false);
+
+  const toggle = (id) => {
+    if (revealed) return;
+    setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : prev.length < 2 ? [...prev, id] : prev);
+  };
+
+  const totalImpact = () => {
+    const chosen = AI_INVESTMENTS.filter(a => selected.includes(a.id));
+    const base = { cost: 0, inventory: 0, profit: 0, speed: 0, satisfaction: 0 };
+    chosen.forEach(a => {
+      Object.keys(base).forEach(k => { base[k] = clamp(base[k] + a.impacts[k], 0, 100); });
+    });
+    return base;
+  };
+
+  return (
+    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px' }}>
+      <SectionHeader step={6} title="AI Investment Strategy" subtitle="Crisis managed. Now future-proof your supply chain. Choose 2 AI capabilities to implement. Each has a different ROI profile." />
+      <WhyBox text="AI doesn't replace supply chain judgment — it augments it. The best investments address the specific vulnerabilities this crisis exposed. Think about what information or automation would have prevented or mitigated what just happened." />
+      <div style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: '10px', padding: '12px 18px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: '14px', color: '#9ba3b8' }}>Investments selected:</span>
+        <span style={{ fontSize: '18px', fontWeight: 700, color: selected.length === 2 ? '#34d399' : '#a78bfa' }}>{selected.length} / 2</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px', marginBottom: '28px' }}>
+        {AI_INVESTMENTS.map((ai, i) => {
+          const isSelected = selected.includes(ai.id);
+          return (
+            <div key={ai.id} className="fade-in"
+              onClick={() => toggle(ai.id)}
+              style={{
+                background: isSelected ? `${ai.color}12` : 'rgba(255,255,255,0.04)',
+                border: isSelected ? `1px solid ${ai.color}50` : '1px solid rgba(255,255,255,0.09)',
+                borderRadius: '12px', padding: '18px', cursor: revealed ? 'default' : 'pointer',
+                transition: 'all 0.2s ease',
+                transform: isSelected ? 'translateY(-3px)' : 'none',
+                opacity: !revealed && selected.length === 2 && !isSelected ? 0.4 : 1,
+                animationDelay: `${i * 0.08}s`,
+              }}
+              onMouseEnter={e => { if (!revealed && !(selected.length === 2 && !isSelected)) { e.currentTarget.style.borderColor = `${ai.color}60`; e.currentTarget.style.transform = isSelected ? 'translateY(-3px)' : 'translateY(-1px)'; }}}
+              onMouseLeave={e => { if (!revealed) { e.currentTarget.style.borderColor = isSelected ? `${ai.color}50` : 'rgba(255,255,255,0.09)'; e.currentTarget.style.transform = isSelected ? 'translateY(-3px)' : 'none'; }}}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '22px' }}>{ai.icon}</span>
+                  <span style={{ fontWeight: 700, fontSize: '14px', color: isSelected ? ai.color : '#e8eaf0' }}>{ai.name}</span>
+                </div>
+                {isSelected && <span style={{ color: ai.color, fontWeight: 700, fontSize: '18px' }}>✓</span>}
+              </div>
+              <p style={{ fontSize: '12px', color: '#9ba3b8', lineHeight: 1.6, marginBottom: '12px' }}>{ai.description}</p>
+              <div style={{ background: `${ai.color}11`, borderRadius: '6px', padding: '8px 10px', marginBottom: '10px' }}>
+                <div style={{ fontSize: '11px', color: ai.color, fontWeight: 700, marginBottom: '2px' }}>Expected Impact</div>
+                <div style={{ fontSize: '11px', color: '#9ba3b8' }}>{ai.benefit}</div>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                {Object.entries(ai.impacts).map(([k, v]) => (
+                  <span key={k} style={{ fontSize: '10px', padding: '2px 7px', borderRadius: '4px', background: `${ai.color}18`, color: ai.color, border: `1px solid ${ai.color}30` }}>
+                    {k.charAt(0).toUpperCase() + k.slice(1)} +{v}
+                  </span>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {selected.length === 2 && (
+        <Card style={{ marginBottom: '24px' }} className="fade-in">
+          <div style={{ fontSize: '14px', fontWeight: 700, marginBottom: '14px', color: '#a78bfa' }}>Combined Business Impact</div>
+          {Object.entries(totalImpact()).map(([k, v]) => (
+            <ProgressBar key={k} label={k.charAt(0).toUpperCase() + k.slice(1)} value={v} color="#a78bfa" animated />
+          ))}
+        </Card>
+      )}
+      <div style={{ textAlign: 'center' }}>
+        <Btn onClick={() => selected.length === 2 && onNext(selected)} disabled={selected.length < 2} style={{ fontSize: '16px', padding: '14px 40px' }}>
+          View Final Dashboard →
+        </Btn>
+      </div>
+    </div>
+  );
+}
+
+function FinalDashboard({ company, crisis, warMetrics, warActions, negScore, leadershipScore, aiInvestments, onReplay }) {
+  const aiData = AI_INVESTMENTS.filter(a => aiInvestments.includes(a.id));
+  const resilience = Math.round((warMetrics.inventory + warMetrics.speed) / 2);
+  const costControl = Math.round(warMetrics.cost);
+  const riskMgmt = Math.round((negScore + (warMetrics.inventory * 0.5)) / 1.5);
+  const custSat = Math.round(warMetrics.satisfaction);
+  const overall = Math.round((leadershipScore * 0.25) + (negScore * 0.2) + (resilience * 0.2) + (costControl * 0.15) + (riskMgmt * 0.1) + (custSat * 0.1));
+  const grade = overall >= 85 ? 'A+' : overall >= 75 ? 'A' : overall >= 65 ? 'B' : overall >= 55 ? 'C' : overall >= 45 ? 'D' : 'F';
+  const gradeColor = overall >= 75 ? '#34d399' : overall >= 55 ? '#fbbf24' : '#f87171';
+  const scores = [
+    { label: 'Leadership', value: leadershipScore, color: '#a78bfa', icon: '👔' },
+    { label: 'Negotiation', value: negScore, color: '#22d3ee', icon: '🤝' },
+    { label: 'Resilience', value: resilience, color: '#34d399', icon: '🛡️' },
+    { label: 'Cost Control', value: costControl, color: '#4f8ef7', icon: '💰' },
+    { label: 'Risk Mgmt', value: riskMgmt, color: '#f472b6', icon: '⚠️' },
+    { label: 'Cust. Sat.', value: custSat, color: '#fb923c', icon: '⭐' },
+  ];
+
+  const worstScore = scores.reduce((min, s) => s.value < min.value ? s : min, scores[0]);
+  const bestScore = scores.reduce((max, s) => s.value > max.value ? s : max, scores[0]);
+
+  const feedbacks = {
+    'A+': 'You navigated this crisis with exceptional strategic clarity. Your decisions balanced short-term recovery with long-term resilience — exactly what the best supply chain leaders do.',
+    'A': 'Excellent performance under pressure. You made mostly sound decisions across all dimensions. A few refinements could have pushed you to elite level.',
+    'B': 'Good instincts with some gaps. You handled the core crisis well but missed opportunities in negotiation or strategic investment.',
+    'C': 'Average crisis management. Some good calls, but critical blind spots in either leadership, cost control, or customer focus held you back.',
+    'D': 'Significant room for improvement. You may have prioritized the wrong variables or made reactive rather than strategic decisions.',
+    'F': 'This crisis would have caused serious long-term damage. Key decisions consistently undermined recovery. Use this as a learning baseline.',
+  };
+  const expertRecs = [
+    'Build a dual-sourcing policy for all critical components — never more than 60% from a single supplier.',
+    'Maintain 30+ days of safety stock for your top 20% of SKUs by revenue impact.',
+    'Run annual tabletop crisis simulations with your leadership team before the real thing hits.',
+    'Invest in supplier financial health monitoring — most disruptions are foreseeable 60-90 days early.',
+    'Pre-negotiate emergency capacity agreements with 2-3 backup logistics providers.',
+  ];
+  const lessons = [
+    `The ${crisis.type} exposed your dependency on a concentrated supply network. Diversification is insurance.`,
+    'Proactive customer communication preserves more revenue than reactive discounting.',
+    'Negotiation leverage comes from preparation, not desperation — build supplier relationships before you need them.',
+    `Your ${worstScore.label.toLowerCase()} score suggests this is your biggest development area as a leader.`,
+    `AI investment in ${aiData[0]?.name || 'demand forecasting'} will pay back 3-5x in the next disruption cycle.`,
+  ];
+
+  return (
+    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px' }}>
+      <div style={{ textAlign: 'center', marginBottom: '36px' }} className="fade-in">
+        <div style={{ fontSize: '14px', color: '#5c647a', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '10px' }}>Final Results</div>
+        <h1 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '4px' }}>Operation Lifeline Complete</h1>
+        <p style={{ color: '#9ba3b8' }}>{company.name} Corp · {crisis.type} · Crisis Resolved</p>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }} className="count-up">
+        <div style={{ textAlign: 'center', background: `${gradeColor}11`, border: `2px solid ${gradeColor}44`, borderRadius: '20px', padding: '32px 60px' }}>
+          <div style={{ fontSize: '14px', color: '#5c647a', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Overall Crisis Score</div>
+          <div style={{ fontSize: '80px', fontWeight: 900, color: gradeColor, lineHeight: 1, marginBottom: '8px' }}>{overall}</div>
+          <div style={{ fontSize: '32px', fontWeight: 700, color: gradeColor }}>{grade}</div>
+          <div style={{ fontSize: '14px', color: '#9ba3b8', marginTop: '8px' }}>{overall >= 75 ? 'Crisis Contained' : overall >= 55 ? 'Partial Recovery' : 'Significant Damage'}</div>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginBottom: '24px' }} className="fade-in">
+        {scores.map(s => (
+          <Card key={s.label} style={{ textAlign: 'center', padding: '14px 10px' }}>
+            <div style={{ fontSize: '18px', marginBottom: '6px' }}>{s.icon}</div>
+            <div style={{ fontSize: '10px', color: '#5c647a', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>{s.label}</div>
+            <div style={{ fontSize: '22px', fontWeight: 700, color: s.value >= 65 ? '#34d399' : s.value >= 45 ? '#fbbf24' : '#f87171' }}>{Math.round(s.value)}</div>
+          </Card>
+        ))}
+      </div>
+
+      <Card style={{ marginBottom: '16px' }} className="fade-in">
+        <div style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: '#9ba3b8', marginBottom: '14px' }}>Performance Breakdown</div>
+        {scores.map(s => <ProgressBar key={s.label} label={s.label} value={s.value} color={s.value >= 65 ? '#34d399' : s.value >= 45 ? '#fbbf24' : '#f87171'} animated />)}
+      </Card>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }} className="fade-in">
+        <Card style={{ borderColor: '#f87171' + '44' }}>
+          <div style={{ fontSize: '11px', color: '#f87171', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>⚠️ Biggest Weakness</div>
+          <div style={{ fontWeight: 700, marginBottom: '4px' }}>{worstScore.icon} {worstScore.label}</div>
+          <div style={{ fontSize: '13px', color: '#9ba3b8', lineHeight: 1.6 }}>Score: {Math.round(worstScore.value)}/100. This area had the most room for improvement in your playthrough.</div>
+        </Card>
+        <Card style={{ borderColor: '#34d399' + '44' }}>
+          <div style={{ fontSize: '11px', color: '#34d399', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>🏆 Biggest Strength</div>
+          <div style={{ fontWeight: 700, marginBottom: '4px' }}>{bestScore.icon} {bestScore.label}</div>
+          <div style={{ fontSize: '13px', color: '#9ba3b8', lineHeight: 1.6 }}>Score: {Math.round(bestScore.value)}/100. Your best dimension — this is where you showed natural leadership instinct.</div>
+        </Card>
+      </div>
+
+      <Card style={{ marginBottom: '14px' }} className="fade-in">
+        <div style={{ fontSize: '11px', color: '#a78bfa', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>👔 Personalized Feedback</div>
+        <p style={{ fontSize: '14px', color: '#c8cad6', lineHeight: 1.8 }}>{feedbacks[grade]}</p>
+      </Card>
+
+      <Card style={{ marginBottom: '14px' }} className="fade-in">
+        <div style={{ fontSize: '11px', color: '#22d3ee', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>🤖 Your AI Investments</div>
+        <div style={{ display: 'grid', gap: '10px' }}>
+          {aiData.map(ai => (
+            <div key={ai.id} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', background: `${ai.color}0d`, border: `1px solid ${ai.color}22`, borderRadius: '8px', padding: '12px' }}>
+              <span style={{ fontSize: '20px' }}>{ai.icon}</span>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '13px', color: ai.color, marginBottom: '2px' }}>{ai.name}</div>
+                <div style={{ fontSize: '12px', color: '#9ba3b8' }}>{ai.benefit}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      <Card style={{ marginBottom: '14px' }} className="fade-in">
+        <div style={{ fontSize: '11px', color: '#fbbf24', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>💡 Expert Recommendations</div>
+        {expertRecs.slice(0, 3).map((rec, i) => (
+          <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+            <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: '#fbbf24', fontWeight: 700, flexShrink: 0 }}>{i + 1}</div>
+            <p style={{ fontSize: '13px', color: '#9ba3b8', lineHeight: 1.6, margin: 0 }}>{rec}</p>
+          </div>
+        ))}
+      </Card>
+
+      <Card style={{ marginBottom: '36px' }} className="fade-in">
+        <div style={{ fontSize: '11px', color: '#34d399', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>📚 Lessons Learned</div>
+        {lessons.map((l, i) => (
+          <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+            <span style={{ color: '#34d399', fontSize: '14px', flexShrink: 0 }}>→</span>
+            <p style={{ fontSize: '13px', color: '#9ba3b8', lineHeight: 1.6, margin: 0 }}>{l}</p>
+          </div>
+        ))}
+      </Card>
+
+      <div style={{ textAlign: 'center' }}>
+        <Btn onClick={onReplay} variant="secondary" style={{ fontSize: '16px', padding: '14px 40px', marginRight: '12px' }}>
+          🔄 Play Again (New Crisis)
+        </Btn>
+        <p style={{ marginTop: '16px', fontSize: '12px', color: '#3a4055' }}>Every replay generates a different company, crisis, and outcome</p>
+      </div>
+    </div>
+  );
+}
+
+// ---- App Shell ----
+
+function App() {
+  const [screen, setScreen] = useState('welcome');
+  const [company, setCompany] = useState(null);
+  const [crisis, setCrisis] = useState(null);
+  const [warMetrics, setWarMetrics] = useState(null);
+  const [warActions, setWarActions] = useState([]);
+  const [negScore, setNegScore] = useState(0);
+  const [leadershipScore, setLeadershipScore] = useState(0);
+  const [aiInvestments, setAiInvestments] = useState([]);
+
+  const startGame = () => {
+    setCompany(generateCompany());
+    setCrisis(generateCrisis());
+    setScreen('company');
+  };
+
+  const replay = () => {
+    setCompany(null); setCrisis(null); setWarMetrics(null); setWarActions([]);
+    setNegScore(0); setLeadershipScore(0); setAiInvestments([]);
+    setScreen('welcome');
+  };
+
+  const steps = ['welcome', 'company', 'crisis', 'warroom', 'negotiation', 'ceo', 'ai', 'final'];
+  const stepIdx = steps.indexOf(screen);
+
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+      {screen !== 'welcome' && screen !== 'final' && (
+        <div style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(10,13,18,0.9)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '12px 20px' }}>
+          <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontSize: '13px', fontWeight: 700, color: '#4f8ef7' }}>🌐 Operation Lifeline</div>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {['Company', 'Crisis', 'War Room', 'Negotiation', 'CEO', 'AI', 'Results'].map((s, i) => (
+                <div key={s} style={{ width: '8px', height: '8px', borderRadius: '50%', background: i < stepIdx - 1 ? '#34d399' : i === stepIdx - 1 ? '#4f8ef7' : 'rgba(255,255,255,0.12)', transition: 'all 0.3s' }} title={s} />
+              ))}
+            </div>
+            <button onClick={replay} style={{ background: 'none', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: '#9ba3b8', fontSize: '12px', padding: '5px 12px', cursor: 'pointer' }}>↺ Restart</button>
+          </div>
+        </div>
+      )}
+
+      {screen === 'welcome' && <WelcomeScreen onStart={startGame} />}
+      {screen === 'company' && <CompanyScreen company={company} onNext={() => setScreen('crisis')} />}
+      {screen === 'crisis' && <CrisisScreen company={company} crisis={crisis} onNext={() => setScreen('warroom')} />}
+      {screen === 'warroom' && <WarRoomScreen onNext={(metrics, actions) => { setWarMetrics(metrics); setWarActions(actions); setScreen('negotiation'); }} />}
+      {screen === 'negotiation' && <NegotiationScreen onNext={(score) => { setNegScore(score); setScreen('ceo'); }} />}
+      {screen === 'ceo' && <CEOScreen onNext={(score) => { setLeadershipScore(score); setScreen('ai'); }} />}
+      {screen === 'ai' && <AIStrategyScreen onNext={(investments) => { setAiInvestments(investments); setScreen('final'); }} />}
+      {screen === 'final' && warMetrics && (
+        <FinalDashboard company={company} crisis={crisis} warMetrics={warMetrics} warActions={warActions}
+          negScore={negScore} leadershipScore={leadershipScore} aiInvestments={aiInvestments} onReplay={replay} />
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
