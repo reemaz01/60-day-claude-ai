@@ -224,7 +224,7 @@ Developing this project provided practical experience in:
 
 # 📷 Screenshots
 
-supplychainbuilder.png
+[Supply Chain Builder](supplychainbuilder.png)
 
 ---
 
