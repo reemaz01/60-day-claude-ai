@@ -113,7 +113,8 @@ Every replay generates:
 This encourages exploration of multiple supply chain strategies.
 
 ---
-#Project HTML File
+##Project
+HTML File:
 [Supply Chain Builder](supplychainbuilder.html)
 ---
 
