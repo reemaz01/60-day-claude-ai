@@ -22,10 +22,6 @@ The application uses drag-and-drop interactions, animated feedback, scoring dash
 
 ---
 
-HTML File
-[Task Compass](taskcompass.html)
----
-
 # 🎯 Learning Objectives
 
 After completing the simulation, users will understand:
@@ -115,56 +111,18 @@ No frameworks or external libraries are required.
 ---
 
 
+HTML File
 
-# 📸 Screenshots
 
-## Task Compass Home
+[Task Compass](taskcompass.html)
 
-> *(Insert screenshot here)*
 
-```
-screenshots/home.png
-```
 
----
+Screenshots
 
-## Ownership Challenge
 
-> *(Insert screenshot here)*
+[Task Compass](taskcompass.png)
 
-```
-screenshots/ownership-stage.png
-```
-
----
-
-## Workflow Routing
-
-> *(Insert screenshot here)*
-
-```
-screenshots/workflow-stage.png
-```
-
----
-
-## Collaboration Challenge
-
-> *(Insert screenshot here)*
-
-```
-screenshots/collaboration-stage.png
-```
-
----
-
-## Organizational Thinking Dashboard
-
-> *(Insert screenshot here)*
-
-```
-screenshots/dashboard.png
-```
 
 ---
 
