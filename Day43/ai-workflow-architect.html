@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Founder's Validation Lab — Idea to MVP Workflow</title>
+<style>
+  :root{
+    --void:#0A0F1C;
+    --panel:#111B2E;
+    --panel-raised:#16213A;
+    --panel-raised2:#1C2A45;
+    --border:#223049;
+    --border-soft:#1A2740;
+    --teal:#2DD4BF;
+    --teal-dim:#1B8577;
+    --amber:#F2A93B;
+    --coral:#FF6B6B;
+    --text:#E7ECF3;
+    --muted:#8C9AB3;
+    --muted2:#5E6C85;
+    --font-display:'Avenir Next','Segoe UI Semibold','Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+    --font-body:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    --font-mono:ui-monospace,'SF Mono','Cascadia Code','Consolas',monospace;
+    --radius:14px;
+  }
+  [data-theme="light"]{
+    --void:#F3F5F9;
+    --panel:#FFFFFF;
+    --panel-raised:#F7F9FC;
+    --panel-raised2:#EEF2F8;
+    --border:#DDE4EE;
+    --border-soft:#E7ECF3;
+    --teal:#0F9C8A;
+    --teal-dim:#0C7A6C;
+    --amber:#B9750D;
+    --coral:#D8434A;
+    --text:#131A28;
+    --muted:#5A6478;
+    --muted2:#8C97AC;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--void);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.5;
+    transition:background .35s ease,color .35s ease;
+    min-height:100vh;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+  }
+  a{color:inherit;}
+  button{font-family:inherit; cursor:pointer;}
+  ::selection{background:var(--teal); color:var(--void);}
+
+  /* ---------- Scaffold ---------- */
+  .app{display:grid; grid-template-columns:280px 1fr; min-height:100vh;}
+  @media (max-width:980px){ .app{grid-template-columns:1fr;} }
+
+  /* ---------- Header ---------- */
+  header.topbar{
+    grid-column:1/-1;
+    display:flex; align-items:center; gap:20px;
+    padding:16px 24px;
+    background:var(--panel);
+    border-bottom:1px solid var(--border);
+    position:sticky; top:0; z-index:50;
+    flex-wrap:wrap;
+  }
+  .brand{display:flex; align-items:center; gap:10px; margin-right:auto;}
+  .brand-mark{
+    width:34px; height:34px; border-radius:9px;
+    background:linear-gradient(135deg,var(--teal),var(--teal-dim));
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-weight:700; color:var(--void); font-size:14px;
+    flex-shrink:0;
+  }
+  .brand-text .t1{font-family:var(--font-display); font-weight:700; font-size:16.5px; letter-spacing:-.01em;}
+  .brand-text .t2{font-size:11.5px; color:var(--muted); font-family:var(--font-mono);}
+
+  .meter-wrap{display:flex; align-items:center; gap:12px; min-width:220px;}
+  .meter-label{font-family:var(--font-mono); font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; white-space:nowrap;}
+  .meter{
+    display:flex; gap:3px; align-items:flex-end; height:22px;
+  }
+  .meter i{
+    width:6px; border-radius:1px; background:var(--border-soft); display:block;
+    transition:background .25s ease, transform .25s ease;
+  }
+  .meter i:nth-child(1){height:40%;} .meter i:nth-child(2){height:55%;} .meter i:nth-child(3){height:70%;}
+  .meter i:nth-child(4){height:85%;} .meter i:nth-child(5){height:100%;} .meter i:nth-child(6){height:85%;}
+  .meter i:nth-child(7){height:70%;} .meter i:nth-child(8){height:55%;} .meter i:nth-child(9){height:40%;} .meter i:nth-child(10){height:25%;}
+  .meter i.on{background:var(--teal);}
+  .meter-pct{font-family:var(--font-mono); font-weight:700; font-size:13px; color:var(--teal); min-width:38px;}
+
+  .topbar-actions{display:flex; gap:8px; align-items:center;}
+  .icon-btn{
+    background:var(--panel-raised); border:1px solid var(--border); color:var(--text);
+    width:36px; height:36px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    font-size:15px; transition:border-color .2s, transform .15s;
+  }
+  .icon-btn:hover{border-color:var(--teal); transform:translateY(-1px);}
+  .btn{
+    background:var(--panel-raised); border:1px solid var(--border); color:var(--text);
+    padding:9px 14px; border-radius:9px; font-size:13px; font-weight:600;
+    display:flex; align-items:center; gap:6px; transition:border-color .2s, transform .15s;
+  }
+  .btn:hover{border-color:var(--teal); transform:translateY(-1px);}
+  .btn.primary{background:var(--teal); color:var(--void); border-color:var(--teal);}
+  .btn.primary:hover{filter:brightness(1.08);}
+
+  /* ---------- Sidebar rail ---------- */
+  nav.rail{
+    background:var(--panel);
+    border-right:1px solid var(--border);
+    padding:20px 14px 40px;
+    position:sticky; top:69px; align-self:start;
+    height:calc(100vh - 69px); overflow-y:auto;
+  }
+  @media (max-width:980px){ nav.rail{position:relative; top:0; height:auto;} }
+  .rail-heading{font-family:var(--font-mono); font-size:10.5px; letter-spacing:.1em; color:var(--muted2); text-transform:uppercase; padding:6px 10px 12px;}
+  .pipe{position:relative;}
+  .stage-node{
+    position:relative; display:flex; gap:12px; align-items:flex-start;
+    padding:11px 10px; border-radius:10px; cursor:pointer;
+    border:1px solid transparent;
+    transition:background .18s, border-color .18s;
+  }
+  .stage-node:hover{background:var(--panel-raised);}
+  .stage-node.active{background:var(--panel-raised2); border-color:var(--border);}
+  .stage-node .connector{
+    position:absolute; left:23px; top:34px; bottom:-14px; width:2px; background:var(--border-soft);
+  }
+  .stage-node:last-child .connector{display:none;}
+  .node-dot{
+    width:26px; height:26px; border-radius:50%; flex-shrink:0; z-index:1;
+    background:var(--panel-raised); border:2px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:10.5px; font-weight:700; color:var(--muted);
+    transition:all .2s;
+  }
+  .stage-node.done .node-dot{background:var(--teal); border-color:var(--teal); color:var(--void);}
+  .stage-node.active .node-dot{border-color:var(--teal); color:var(--teal);}
+  .node-body .n-title{font-size:13px; font-weight:600; line-height:1.3;}
+  .node-body .n-sub{font-size:11px; color:var(--muted); font-family:var(--font-mono); margin-top:2px;}
+  .node-progress{height:3px; background:var(--border-soft); border-radius:2px; margin-top:6px; overflow:hidden;}
+  .node-progress i{display:block; height:100%; background:var(--teal); border-radius:2px; transition:width .3s ease;}
+
+  .rail-foot{margin-top:22px; padding-top:16px; border-top:1px solid var(--border-soft);}
+  .jump-link{display:block; font-size:12px; color:var(--muted); padding:6px 10px; border-radius:7px;}
+  .jump-link:hover{background:var(--panel-raised); color:var(--text);}
+
+  /* ---------- Main ---------- */
+  main{padding:28px 32px 80px; max-width:980px; width:100%; margin:0 auto;}
+  @media (max-width:640px){ main{padding:18px 16px 60px;} }
+
+  section.hero{
+    background:linear-gradient(160deg,var(--panel-raised),var(--panel));
+    border:1px solid var(--border); border-radius:var(--radius);
+    padding:28px; margin-bottom:26px;
+    position:relative; overflow:hidden;
+  }
+  section.hero::after{
+    content:""; position:absolute; right:-60px; top:-60px; width:220px; height:220px; border-radius:50%;
+    background:radial-gradient(circle,rgba(45,212,191,.14),transparent 70%);
+  }
+  .hero-eyebrow{font-family:var(--font-mono); font-size:11px; color:var(--teal); letter-spacing:.1em; text-transform:uppercase; margin-bottom:10px;}
+  .hero h1{font-family:var(--font-display); font-size:clamp(24px,4vw,32px); font-weight:700; letter-spacing:-.02em; margin-bottom:10px;}
+  .hero p{color:var(--muted); font-size:14.5px; max-width:58ch;}
+  .hero-stats{display:flex; gap:22px; margin-top:20px; flex-wrap:wrap;}
+  .hstat .v{font-family:var(--font-mono); font-size:19px; font-weight:700; color:var(--teal);}
+  .hstat .l{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em;}
+
+  .stage-header{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:6px;}
+  .stage-num{font-family:var(--font-mono); color:var(--teal); font-size:12.5px; letter-spacing:.08em;}
+  .stage-title{font-family:var(--font-display); font-size:26px; font-weight:700; letter-spacing:-.015em; margin-top:4px;}
+  .stage-sub{color:var(--muted); font-size:14px; margin-top:6px; max-width:60ch;}
+  .stage-meta{display:flex; gap:10px; flex-wrap:wrap; margin-top:2px;}
+  .chip{
+    font-family:var(--font-mono); font-size:11px; padding:5px 10px; border-radius:999px;
+    background:var(--panel-raised); border:1px solid var(--border); color:var(--muted); white-space:nowrap;
+  }
+  .chip.time{color:var(--amber); border-color:rgba(242,169,59,.35);}
+
+  .tabs{display:flex; gap:6px; margin:20px 0 4px; overflow-x:auto; padding-bottom:6px; border-bottom:1px solid var(--border-soft);}
+  .tab-btn{
+    background:none; border:none; color:var(--muted); padding:8px 12px; font-size:12.5px; font-weight:600;
+    border-radius:8px 8px 0 0; white-space:nowrap; border-bottom:2px solid transparent;
+  }
+  .tab-btn:hover{color:var(--text);}
+  .tab-btn.active{color:var(--teal); border-bottom-color:var(--teal);}
+
+  .card{
+    background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+    padding:22px; margin-bottom:16px;
+  }
+  .card h3{font-family:var(--font-display); font-size:16px; margin-bottom:12px; display:flex; align-items:center; gap:8px;}
+  .card h3 .dot{width:7px; height:7px; border-radius:50%; background:var(--teal);}
+  ul.plain{list-style:none;}
+  ul.plain li{
+    position:relative; padding:8px 0 8px 20px; font-size:14px; color:var(--text); border-bottom:1px solid var(--border-soft);
+  }
+  ul.plain li:last-child{border-bottom:none;}
+  ul.plain li::before{content:"—"; position:absolute; left:0; color:var(--muted2);}
+
+  .task-row{
+    display:flex; align-items:flex-start; gap:10px; padding:9px 0; border-bottom:1px solid var(--border-soft);
+  }
+  .task-row:last-child{border-bottom:none;}
+  .task-check{
+    width:19px; height:19px; border-radius:5px; border:2px solid var(--border); flex-shrink:0; margin-top:2px;
+    display:flex; align-items:center; justify-content:center; transition:all .15s;
+  }
+  .task-check.checked{background:var(--teal); border-color:var(--teal);}
+  .task-check.checked::after{content:"✓"; color:var(--void); font-size:12px; font-weight:800;}
+  .task-text{font-size:14px; flex:1;}
+  .task-row.checked .task-text{color:var(--muted2); text-decoration:line-through;}
+  .star-btn{background:none; border:none; color:var(--muted2); font-size:15px; flex-shrink:0;}
+  .star-btn.on{color:var(--amber);}
+
+  .tool-card{
+    border:1px solid var(--border); border-radius:11px; padding:15px; background:var(--panel-raised);
+    margin-bottom:12px;
+  }
+  .tool-card .th{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:6px; flex-wrap:wrap;}
+  .tool-name{font-weight:700; font-size:14.5px;}
+  .tool-alt{font-family:var(--font-mono); font-size:11px; color:var(--muted);}
+  .tool-why{font-size:13px; color:var(--muted); line-height:1.55;}
+
+  .prompt-block{
+    background:var(--void); border:1px solid var(--border); border-radius:10px; padding:14px 16px;
+    font-family:var(--font-mono); font-size:12.5px; color:var(--teal); line-height:1.6; margin-bottom:10px;
+    position:relative; white-space:pre-wrap;
+  }
+  [data-theme="light"] .prompt-block{color:var(--teal-dim);}
+  .copy-btn{
+    position:absolute; top:8px; right:8px; background:var(--panel-raised); border:1px solid var(--border);
+    color:var(--muted); font-size:10.5px; padding:4px 8px; border-radius:6px; font-family:var(--font-body); font-weight:600;
+  }
+  .copy-btn:hover{color:var(--teal); border-color:var(--teal);}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media (max-width:700px){ .grid2{grid-template-columns:1fr;} }
+
+  .mistake-item{display:flex; gap:10px; padding:9px 0; border-bottom:1px solid var(--border-soft); font-size:14px;}
+  .mistake-item:last-child{border-bottom:none;}
+  .mistake-item .x{color:var(--coral); font-weight:800; flex-shrink:0;}
+
+  .tip-item{display:flex; gap:10px; padding:9px 0; border-bottom:1px solid var(--border-soft); font-size:14px;}
+  .tip-item:last-child{border-bottom:none;}
+  .tip-item .b{color:var(--amber); flex-shrink:0;}
+
+  textarea.notes{
+    width:100%; min-height:100px; background:var(--void); border:1px solid var(--border); border-radius:10px;
+    color:var(--text); font-family:var(--font-body); font-size:13.5px; padding:12px; resize:vertical;
+  }
+  textarea.notes:focus{outline:none; border-color:var(--teal);}
+  .save-hint{font-size:11px; color:var(--muted2); margin-top:6px; font-family:var(--font-mono);}
+
+  .stage-nav-btns{display:flex; justify-content:space-between; margin-top:22px; gap:10px;}
+
+  /* Decision tree */
+  .dtree{border:1px solid var(--border); border-radius:var(--radius); padding:22px; background:var(--panel);}
+  .dtree-q{font-size:15px; font-weight:600; margin-bottom:14px;}
+  .dtree-opts{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;}
+  .dtree-opt{
+    background:var(--panel-raised); border:1px solid var(--border); padding:10px 16px; border-radius:9px; font-size:13.5px; font-weight:600;
+  }
+  .dtree-opt:hover{border-color:var(--teal);}
+  .dtree-path{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;}
+  .dtree-path span{font-family:var(--font-mono); font-size:11px; background:var(--panel-raised2); padding:4px 9px; border-radius:6px; color:var(--muted);}
+  .dtree-result{
+    background:var(--panel-raised); border:1px solid var(--teal); border-radius:10px; padding:16px; margin-top:6px;
+  }
+  .dtree-result .rt{font-family:var(--font-mono); font-size:11px; color:var(--teal); text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px;}
+
+  table.cmp{width:100%; border-collapse:collapse; font-size:13px;}
+  table.cmp th, table.cmp td{padding:10px 12px; border-bottom:1px solid var(--border-soft); text-align:left;}
+  table.cmp th{font-family:var(--font-mono); font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:600;}
+  table.cmp tr:hover td{background:var(--panel-raised);}
+  .tag{display:inline-block; font-size:10.5px; font-family:var(--font-mono); padding:2px 7px; border-radius:5px; background:var(--panel-raised2); color:var(--teal); margin:2px 3px 0 0;}
+
+  footer.siteFoot{
+    grid-column:1/-1; text-align:center; padding:26px; color:var(--muted2); font-size:12px; border-top:1px solid var(--border); font-family:var(--font-mono);
+  }
+
+  .bookmarks-panel{position:fixed; right:0; top:69px; width:320px; max-width:90vw; height:calc(100vh - 69px);
+    background:var(--panel); border-left:1px solid var(--border); z-index:60; transform:translateX(100%);
+    transition:transform .28s ease; overflow-y:auto; padding:20px;}
+  .bookmarks-panel.open{transform:translateX(0);}
+  .bm-item{background:var(--panel-raised); border:1px solid var(--border); border-radius:9px; padding:12px; margin-bottom:10px; font-size:13px;}
+  .bm-item .bm-stage{font-family:var(--font-mono); font-size:10.5px; color:var(--teal); margin-bottom:4px;}
+
+  @media print{
+    nav.rail, header.topbar, .stage-nav-btns, .tabs, .bookmarks-panel{display:none !important;}
+    body{background:#fff; color:#000;}
+    .card{break-inside:avoid; border-color:#ccc;}
+    main{max-width:100%;}
+  }
+</style>
+</head>
+<body data-theme="dark">
+<div class="app" id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">FV</div>
+      <div class="brand-text">
+        <div class="t1">Founder's Validation Lab</div>
+        <div class="t2">Idea → MVP · Solo Founder Track</div>
+      </div>
+    </div>
+    <div class="meter-wrap">
+      <span class="meter-label">Confidence</span>
+      <div class="meter" id="meterBars"></div>
+      <span class="meter-pct" id="meterPct">0%</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="bookmarkToggle" title="Bookmarks">★</button>
+      <button class="icon-btn" id="themeToggle" title="Toggle theme">◐</button>
+      <button class="btn" id="printBtn">Print Guide</button>
+    </div>
+  </header>
+
+  <nav class="rail" id="rail"></nav>
+
+  <main id="main"></main>
+
+  <footer class="siteFoot">FOUNDER'S VALIDATION LAB — BUILT WITH THE AI WORKFLOW ARCHITECT — YOUR PROGRESS SAVES LOCALLY, ON THIS DEVICE, IN THIS BROWSER</footer>
+</div>
+
+<div class="bookmarks-panel" id="bmPanel">
+  <h3 style="font-family:var(--font-display); margin-bottom:14px;">Bookmarked Tasks</h3>
+  <div id="bmList"></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ===================== helpers ===================== */
+function el(tag, props, children){
+  const node = document.createElement(tag);
+  if(props){
+    for(const k in props){
+      if(k === "class") node.className = props[k];
+      else if(k === "text") node.textContent = props[k];
+      else if(k.startsWith("on") && typeof props[k] === "function") node.addEventListener(k.slice(2), props[k]);
+      else node.setAttribute(k, props[k]);
+    }
+  }
+  if(children){
+    (Array.isArray(children) ? children : [children]).forEach(c=>{
+      if(c === null || c === undefined) return;
+      if(typeof c === "string") node.appendChild(document.createTextNode(c));
+      else node.appendChild(c);
+    });
+  }
+  return node;
+}
+function clear(node){ while(node.firstChild) node.removeChild(node.firstChild); }
+
+const STORE_KEY = "founderValidationLab_v1";
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return {tasks:{}, notes:{}, bookmarks:{}, theme:"dark", activeStage:0};
+}
+function saveState(){ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+let state = loadState();
+
+/* ===================== data ===================== */
+const stages = [
+{
+  id:"framing", title:"Idea Capture & Problem Framing", sub:"Turn a vague spark into a falsifiable problem statement you can actually test.",
+  time:"2–4 hours",
+  objectives:[
+    "Convert the raw idea into a single, testable problem statement",
+    "Identify who specifically has this problem (not 'everyone')",
+    "Separate assumptions from facts you already know",
+    "Define what 'validated' will mean before you start"
+  ],
+  tasks:[
+    "Write the idea as one sentence: [who] struggles with [problem] when [context]",
+    "List every assumption baked into that sentence and mark each as fact or guess",
+    "Draft 3 alternative problem framings in case the first is too broad",
+    "Define your kill criteria — what result would make you drop this idea"
+  ],
+  aiTools:[
+    {name:"Claude", why:"Best for structured reasoning — pressure-tests a problem statement, surfaces hidden assumptions, and rewrites vague framing into something falsifiable.", alt:"ChatGPT, Gemini"},
+    {name:"Notion AI", why:"Keeps the framing, assumptions log, and kill-criteria in one living document you'll reference for the rest of the process.", alt:"Obsidian, Coda"}
+  ],
+  prompts:[
+    "Here is my raw startup idea: [idea]. Rewrite it as a single testable problem statement in the form '[who] struggles with [problem] when [context]', then list every assumption hidden inside that sentence.",
+    "Given this problem statement: [statement], propose 3 alternative framings that narrow the target user further, and explain what each framing would let me test that the others wouldn't."
+  ],
+  bestPractices:[
+    "Write the problem statement before you think about the solution at all",
+    "Name a specific person or role, not a demographic ('freelance video editors', not 'creators')",
+    "Keep the first framing narrow — you can always widen later, narrowing later is expensive"
+  ],
+  mistakes:[
+    "Starting from the solution ('I want to build an app that...') instead of the problem",
+    "Defining the user as 'everyone' or 'small businesses' — too broad to interview or market to",
+    "Skipping kill criteria, which makes it easy to rationalize a bad result later"
+  ],
+  outputs:["One-sentence problem statement", "Assumptions log (fact vs. guess)", "Kill criteria document"],
+  tips:["Timebox this stage hard — 4 hours max. Framing can be revisited after real customer signal."]
+},
+{
+  id:"research", title:"Market & Competitor Research", sub:"Map who else is solving this, how big the opportunity is, and where the gaps are.",
+  time:"1–2 days",
+  objectives:[
+    "Identify direct and adjacent competitors",
+    "Estimate rough market size and willingness to pay",
+    "Find the gap your framing exploits that incumbents don't cover",
+    "Decide if the market is a 'yes, but crowded' or a genuine white space"
+  ],
+  tasks:[
+    "Search for 5–10 direct competitors and 5 adjacent/indirect ones",
+    "Build a comparison table: pricing, target user, core feature, weakness",
+    "Pull 15–20 minutes of recent reviews or complaints about each competitor",
+    "Draft a rough TAM/SAM/SOM estimate using public data",
+    "Write a one-paragraph 'why now' — what's changed that makes this newly viable"
+  ],
+  aiTools:[
+    {name:"Claude (with web search)", why:"Synthesizes competitor research, review complaints, and market sizing into a structured brief instead of 20 open tabs.", alt:"Perplexity, ChatGPT with browsing"},
+    {name:"G2 / Capterra / App Store reviews", why:"Real user complaints about competitors are the highest-signal source of unmet needs — feed these into an AI summarizer.", alt:"Reddit, Product Hunt comments"},
+    {name:"Exploding Topics / Google Trends", why:"Quick sanity check on whether interest in the space is rising, flat, or declining.", alt:"SimilarWeb, SEMrush"}
+  ],
+  prompts:[
+    "Research direct and indirect competitors for a product that solves: [problem statement]. For each, give me pricing model, core feature, and the single biggest complaint from real user reviews.",
+    "Based on these competitor complaints: [paste complaints], identify the 3 most common unmet needs and rank them by how painful they seem.",
+    "Give me a rough TAM/SAM/SOM estimate for [market], showing your assumptions and sources so I can sanity-check them."
+  ],
+  bestPractices:[
+    "Read actual negative reviews, not just competitor marketing pages",
+    "Treat 'no competitors' as a red flag to investigate, not a reason to celebrate",
+    "Write down your market size assumptions explicitly — you'll revisit them post-launch"
+  ],
+  mistakes:[
+    "Only looking at direct competitors and missing the indirect alternative (spreadsheets, doing it manually, hiring someone)",
+    "Using top-down market sizing ('if we get 1% of a $10B market...') as if it were evidence",
+    "Stopping research the moment you find one thing that confirms your idea"
+  ],
+  outputs:["Competitor comparison table", "Market size estimate with assumptions", "'Why now' paragraph"],
+  tips:["Set a research budget: 90 minutes per competitor category, then move on — research can expand forever."]
+},
+{
+  id:"discovery", title:"Customer Discovery Interviews", sub:"Talk to real humans before writing a line of code or a landing page.",
+  time:"1–2 weeks",
+  objectives:[
+    "Recruit and interview 8–15 people who match your target user",
+    "Learn how they currently solve (or tolerate) the problem",
+    "Detect real pain signals vs. polite interest",
+    "Avoid leading questions that create false validation"
+  ],
+  tasks:[
+    "Write a discovery script of 8–10 open-ended, non-leading questions",
+    "Recruit interviewees via communities, cold outreach, or your network",
+    "Run interviews, record with permission, and take raw notes",
+    "Transcribe and tag each interview for pain intensity, current workaround, willingness to pay",
+    "Synthesize patterns across all interviews into a findings doc"
+  ],
+  aiTools:[
+    {name:"Claude", why:"Turns raw interview transcripts into tagged, pattern-level insights fast, and helps you rewrite leading questions before you ask them.", alt:"ChatGPT"},
+    {name:"Otter.ai / Fireflies.ai", why:"Automatic transcription and speaker separation so you can stay present in the conversation instead of typing notes.", alt:"Whisper (local), Grain"},
+    {name:"Airtable", why:"Structured database for tagging interviews by pain level, workaround, and willingness to pay so patterns become visible.", alt:"Google Sheets, Notion"}
+  ],
+  prompts:[
+    "Review this discovery interview script and flag every question that is leading, closed-ended, or likely to produce a polite but false-positive answer: [script]",
+    "Here is a raw interview transcript: [transcript]. Extract the stated problem, current workaround, emotional intensity of the pain (1–5), and any mention of willingness to pay.",
+    "Across these 10 interview summaries: [summaries], identify the 3 most repeated pain points and the 3 most inconsistent ones."
+  ],
+  bestPractices:[
+    "Ask about past behavior ('tell me about the last time this happened'), not hypothetical future behavior",
+    "Let silence sit — the best insights often come after an uncomfortable pause",
+    "Interview until you stop hearing new information, not a fixed arbitrary number"
+  ],
+  mistakes:[
+    "Pitching your solution during the interview instead of just listening",
+    "Asking 'would you use this?' — hypothetical questions produce unreliable yes answers",
+    "Only interviewing friends and family, who are biased toward encouraging you"
+  ],
+  outputs:["Discovery script", "8–15 tagged interview transcripts", "Synthesized findings document"],
+  tips:["Record every interview (with consent) — you will hear things differently on a second listen than you did live."]
+},
+{
+  id:"signal", title:"Problem Validation & Signal Analysis", sub:"Decide, with evidence, whether the problem is real, painful, and worth solving.",
+  time:"2–3 days",
+  objectives:[
+    "Score the problem's validation strength against clear criteria",
+    "Distinguish a 'vitamin' (nice to have) from a 'painkiller' (must have)",
+    "Identify the strongest evidence and the biggest remaining doubt",
+    "Make an explicit go / pivot / kill call"
+  ],
+  tasks:[
+    "Score each interview against a rubric: pain frequency, pain intensity, current spend, workaround effort",
+    "Calculate what % of interviewees showed strong pain signal vs. polite interest",
+    "Revisit the kill criteria from Stage 1 and check the evidence against them",
+    "Write a one-page validation memo with a clear go / pivot / kill recommendation"
+  ],
+  aiTools:[
+    {name:"Claude", why:"Applies a scoring rubric consistently across many interviews and helps write an honest, bias-checked validation memo.", alt:"ChatGPT"},
+    {name:"Google Sheets + formulas", why:"Simple, transparent scoring math that you (and future collaborators) can audit — no black-box AI scoring needed here.", alt:"Airtable"}
+  ],
+  prompts:[
+    "Here are my tagged interview scores: [data]. Calculate the percentage showing strong pain signal (frequency + intensity both high) versus weak/polite interest, and flag any patterns in the weak-signal group.",
+    "Based on this evidence: [summary of findings], write an honest one-page validation memo recommending go, pivot, or kill — and explicitly argue against my own likely bias toward 'go'."
+  ],
+  bestPractices:[
+    "Weight actions (money spent, time invested in workarounds) far higher than opinions ('that sounds cool')",
+    "Actively look for disconfirming evidence, not just confirming quotes",
+    "Write the memo as if you were advising a friend, not defending your own idea"
+  ],
+  mistakes:[
+    "Counting polite enthusiasm ('I'd definitely use that!') as strong validation",
+    "Cherry-picking the 2 best interviews and ignoring the 8 lukewarm ones",
+    "Treating 'validated' as permanent — signal can and will change as the market shifts"
+  ],
+  outputs:["Validation scoring sheet", "One-page validation memo", "Explicit go/pivot/kill decision"],
+  tips:["If the honest answer is 'pivot' or 'kill', that's a fast, cheap win — it's far cheaper now than after building an MVP."]
+},
+{
+  id:"solution", title:"Solution Design & Landing Page Smoke Test", sub:"Sketch the solution and test real demand before writing product code.",
+  time:"3–5 days",
+  objectives:[
+    "Translate validated pain into a clear, differentiated value proposition",
+    "Design a minimal landing page that sells the outcome, not the feature list",
+    "Run a smoke test to measure real intent (sign-ups, waitlist, pre-orders)",
+    "Set a numeric threshold that defines smoke-test success in advance"
+  ],
+  tasks:[
+    "Write a value proposition statement using the validated pain language from interviews",
+    "Sketch a wireframe: headline, subhead, 3 benefit bullets, single call-to-action",
+    "Build and publish a landing page with an email capture or waitlist form",
+    "Drive targeted traffic via communities, cold outreach, or small paid tests",
+    "Track conversion rate against your pre-set threshold"
+  ],
+  aiTools:[
+    {name:"Claude", why:"Generates landing page copy directly from interview language so the page speaks the customer's own words back to them.", alt:"ChatGPT, Jasper"},
+    {name:"Framer / Carrd", why:"Fast, no-code landing pages you can publish same-day without touching a codebase.", alt:"Webflow, plain HTML"},
+    {name:"Claude / v0.dev", why:"Can generate a clean single-page HTML landing page directly from a wireframe description if you want full code control.", alt:"Cursor + Claude"}
+  ],
+  prompts:[
+    "Using this validated pain language from interviews: [quotes], write 3 headline and subhead variations for a landing page that speaks in the customer's own words rather than generic marketing language.",
+    "Write copy for a single-page landing site with: headline, subhead, 3 benefit bullets, 1 CTA, and 3 FAQ answers addressing likely objections, for this product: [description]. Keep total word count under 200.",
+    "Generate a single self-contained HTML landing page with email capture form (no backend, just a mailto or placeholder action) based on this copy: [copy]."
+  ],
+  bestPractices:[
+    "Sell the outcome ('stop losing 3 hours a week to X') not the feature ('AI-powered dashboard')",
+    "Set your success threshold (e.g. 15% visitor-to-signup) before traffic starts, not after",
+    "Send traffic from real, relevant channels — not just friends, who will convert regardless"
+  ],
+  mistakes:[
+    "Building a full feature list on the landing page instead of one sharp promise",
+    "Declaring success without a pre-set numeric threshold ('a few sign-ups feels good')",
+    "Driving only warm, biased traffic and mistaking it for market signal"
+  ],
+  outputs:["Value proposition statement", "Published landing page", "Smoke-test conversion data"],
+  tips:["A landing page that converts at 20%+ from cold traffic is a strong green light — below 5% deserves a rethink of the offer."]
+},
+{
+  id:"scope", title:"MVP Scope & Build Plan", sub:"Cut the idea down to the smallest thing that tests the core value proposition.",
+  time:"1–2 days",
+  objectives:[
+    "Define the single core workflow the MVP must nail",
+    "Ruthlessly cut every feature that isn't required to test that workflow",
+    "Choose a tech stack you can actually ship solo, fast",
+    "Create a build plan with milestones and a launch date"
+  ],
+  tasks:[
+    "List every possible feature, then mark each as core, nice-to-have, or cut",
+    "Storyboard the single critical user flow from entry to 'aha' moment",
+    "Choose stack and tools based on your speed, not resume-building",
+    "Break the build into weekly milestones with a hard launch date",
+    "Define the 3–5 metrics that will tell you if the MVP is working"
+  ],
+  aiTools:[
+    {name:"Claude", why:"Great sparring partner for ruthless scope-cutting — pushes back on 'nice to have' features disguised as essential.", alt:"ChatGPT"},
+    {name:"Linear / Trello", why:"Lightweight milestone tracking that won't become its own project to manage.", alt:"Notion, GitHub Projects"}
+  ],
+  prompts:[
+    "Here is my full feature wishlist for an MVP: [list]. Given that the core hypothesis to test is '[value proposition]', tell me which 3 features are truly essential and which should be cut, with reasoning for each.",
+    "Draft a 4-week solo build plan for an MVP with this core flow: [flow], assuming I can commit [X] hours/week and my stack is [stack]. Include weekly milestones and a definition of done for each."
+  ],
+  bestPractices:[
+    "If you can't ship the MVP in 2–4 weeks solo, the scope is still too big",
+    "Pick boring, proven tools over exciting new ones — speed matters more than novelty here",
+    "Design the MVP to produce measurable data, not just 'feel finished'"
+  ],
+  mistakes:[
+    "Building account systems, admin panels, and settings pages before proving the core value",
+    "Choosing a stack to learn a new skill rather than to ship fastest",
+    "Skipping analytics, so you launch with no way to measure what happened"
+  ],
+  outputs:["Feature cut list (core / nice-to-have / cut)", "Critical user flow storyboard", "4-week build plan with milestones"],
+  tips:["Write your MVP's 'definition of done' on day one and pin it somewhere visible — scope creep is the #1 solo-founder killer."]
+},
+{
+  id:"build", title:"MVP Build & QA", sub:"Ship the smallest working version of the core flow, fast and functionally solid.",
+  time:"2–4 weeks",
+  objectives:[
+    "Build the core flow end-to-end before polishing anything",
+    "Use AI coding tools to compress build time without sacrificing reliability",
+    "Test the flow with real (if messy) data",
+    "Instrument basic analytics before any user touches it"
+  ],
+  tasks:[
+    "Set up the project skeleton, auth (if needed), and data model",
+    "Build the core flow first, defer all secondary screens",
+    "Add lightweight analytics events on the key actions",
+    "Run manual QA on the full flow across at least 2 devices/browsers",
+    "Fix critical bugs; log non-critical ones for post-launch"
+  ],
+  aiTools:[
+    {name:"Claude Code / Cursor", why:"Fastest way for a solo builder to go from scoped plan to working code, with in-editor context of the whole codebase.", alt:"GitHub Copilot, Windsurf"},
+    {name:"Supabase", why:"Auth, database, and storage in one place with minimal setup — ideal for a solo founder who needs backend speed, not backend mastery.", alt:"Firebase, PlanetScale"},
+    {name:"Vercel / Netlify", why:"One-command deploys with preview URLs, so every build iteration is instantly shareable for feedback.", alt:"Render, Railway"},
+    {name:"PostHog", why:"Free-tier product analytics that's fast to instrument and gives session replay for free — useful for watching real usage post-launch.", alt:"Plausible, Mixpanel"}
+  ],
+  prompts:[
+    "I'm building [core flow] with [stack]. Generate the data model and core API routes needed, keeping it as minimal as possible while still being production-safe.",
+    "Review this code for the core user flow: [code]. Flag anything that would break under real user input, missing error handling, or obvious security gaps — but don't suggest features beyond what's scoped.",
+    "Suggest the 5 most important analytics events to track for this MVP flow: [flow description], and where in the code each should fire."
+  ],
+  bestPractices:[
+    "Build and test the unhappy paths (empty states, errors, slow network) not just the happy path",
+    "Deploy early and often to a real URL — don't wait for 'done' to see it live",
+    "Keep a running bug list; triage ruthlessly into 'blocks launch' vs. 'later'"
+  ],
+  mistakes:[
+    "Polishing visual design before the core flow works end-to-end",
+    "Skipping error states, so the first real user hits a blank screen or crash",
+    "Adding 'just one more feature' during the build instead of holding scope"
+  ],
+  outputs:["Working MVP deployed to a live URL", "Basic analytics instrumentation", "Triaged bug list"],
+  tips:["Set a 'code freeze' date before launch day so the last 48 hours are QA and polish, not new features."]
+},
+{
+  id:"launch", title:"Beta Launch, Feedback & Go/No-Go", sub:"Get the MVP in front of real users, gather signal, and decide what's next.",
+  time:"1–3 weeks",
+  objectives:[
+    "Launch to a small, targeted beta group before any public launch",
+    "Collect structured feedback alongside behavioral analytics data",
+    "Separate feature requests from evidence of unmet core need",
+    "Make a clear go/iterate/pivot/kill decision with supporting evidence"
+  ],
+  tasks:[
+    "Recruit 10–30 beta users from your discovery interview list and adjacent communities",
+    "Onboard them personally where possible; watch or ask about first impressions",
+    "Send a structured feedback survey after 3–5 days of use",
+    "Review analytics: activation rate, retention at day 3/7, drop-off points",
+    "Synthesize qualitative + quantitative data into a final decision memo"
+  ],
+  aiTools:[
+    {name:"Claude", why:"Synthesizes open-ended survey responses and analytics into a coherent decision memo faster than manual review.", alt:"ChatGPT"},
+    {name:"Typeform / Tally", why:"Clean, fast feedback surveys with conditional logic to dig deeper on interesting answers.", alt:"Google Forms"},
+    {name:"PostHog / Amplitude", why:"Funnel and retention analysis to see where users actually drop off, not just what they say.", alt:"Mixpanel"}
+  ],
+  prompts:[
+    "Here are 20 open-ended beta feedback responses: [responses]. Cluster them into themes, separate 'feature requests' from 'evidence of unmet core need', and rank themes by frequency and intensity.",
+    "Given this analytics summary: [activation/retention numbers] and this qualitative feedback: [themes], write a decision memo recommending go, iterate, pivot, or kill, with the strongest evidence for and against each option.",
+    "Draft a follow-up outreach message to beta users who churned within the first week, asking specifically why they stopped using the product."
+  ],
+  bestPractices:[
+    "Weight what people do (retention, repeat usage) above what they say in surveys",
+    "Talk to churned users specifically — they carry the highest-value feedback",
+    "Set the go/no-go decision date in advance so you don't drift indefinitely in 'beta mode'"
+  ],
+  mistakes:[
+    "Treating every feature request as a mandate instead of one data point",
+    "Only surveying engaged users and ignoring people who quietly disappeared",
+    "Delaying the go/no-go decision indefinitely because the data is 'mixed'"
+  ],
+  outputs:["Beta feedback synthesis", "Activation & retention analytics summary", "Final go/iterate/pivot/kill decision memo"],
+  tips:["'Mixed' data is still a decision — usually it means iterate on a specific segment rather than go broad or kill entirely."]
+}
+];
+
+const decisionTree = {
+  q:"Did at least 60% of your discovery interviews show strong pain signal (frequent + intense + an existing workaround they already pay time or money for)?",
+  yes:{
+    q:"Did your landing page smoke test hit your pre-set conversion threshold?",
+    yes:{
+      q:"After beta, did day-7 retention clear a level you'd be proud to show an investor?",
+      yes:{result:"GO — Scale the MVP", detail:"You have evidence at three separate layers: stated pain, demonstrated intent, and actual behavior. Move from MVP to a real roadmap, and start thinking about acquisition channels and monetization structure."},
+      no:{result:"ITERATE — Fix retention before scaling", detail:"People wanted in, but the product isn't sticking. Go back to churned-user interviews before writing more code — you likely have an onboarding or core-value-delivery gap, not a market gap."}
+    },
+    no:{result:"ITERATE — Fix the offer, not the market", detail:"The pain is real but your pitch isn't converting. Revisit your landing page copy and value proposition using the exact language from interviews before assuming the idea itself is wrong."}
+  },
+  no:{
+    q:"Was the signal weak because the problem is niche-but-real, or because it isn't actually painful?",
+    "niche":{result:"PIVOT — Narrow the target user", detail:"A small number of people may feel this intensely. Re-run discovery with a tighter, more specific persona rather than abandoning the core insight."},
+    "notPainful":{result:"KILL — Return to problem framing", detail:"Without real pain, no amount of good execution will save this. Take the assumptions log from Stage 1 and start over with a different problem statement — this is a fast, cheap outcome, not a failure."}
+  }
+};
+
+/* ===================== render: rail ===================== */
+function taskProgress(stage){
+  const total = stage.tasks.length;
+  let done = 0;
+  stage.tasks.forEach((t,i)=>{ if(state.tasks[stage.id+"_"+i]) done++; });
+  return {done, total};
+}
+function overallProgress(){
+  let done=0, total=0;
+  stages.forEach(s=>{ const p=taskProgress(s); done+=p.done; total+=p.total; });
+  return total ? done/total : 0;
+}
+
+function renderMeter(){
+  const bars = document.getElementById("meterBars");
+  clear(bars);
+  const pct = overallProgress();
+  const litCount = Math.round(pct*10);
+  for(let i=0;i<10;i++){
+    bars.appendChild(el("i", {class: i<litCount ? "on":""}));
+  }
+  document.getElementById("meterPct").textContent = Math.round(pct*100)+"%";
+}
+
+function renderRail(){
+  const rail = document.getElementById("rail");
+  clear(rail);
+  rail.appendChild(el("div",{class:"rail-heading",text:"Validation Pipeline"}));
+  const pipe = el("div",{class:"pipe"});
+  stages.forEach((s, idx)=>{
+    const p = taskProgress(s);
+    const isDone = p.total>0 && p.done===p.total;
+    const isActive = state.activeStage === idx;
+    const node = el("div",{class:"stage-node"+(isActive?" active":"")+(isDone?" done":""), onclick:()=>{ state.activeStage = idx; saveState(); renderAll(); document.getElementById("main").scrollIntoView({behavior:"smooth"}); }},[
+      el("div",{class:"connector"}),
+      el("div",{class:"node-dot",text: isDone ? "✓" : String(idx+1)}),
+      el("div",{class:"node-body"},[
+        el("div",{class:"n-title",text:s.title}),
+        el("div",{class:"n-sub",text:p.done+"/"+p.total+" tasks · "+s.time}),
+        el("div",{class:"node-progress"},[ el("i",{style:"width:"+(p.total? (p.done/p.total*100):0)+"%"}) ])
+      ])
+    ]);
+    pipe.appendChild(node);
+  });
+  rail.appendChild(pipe);
+
+  const foot = el("div",{class:"rail-foot"});
+  [["Decision Tree","#decision-tree"],["Workflow Summary","#summary"],["Recommended AI Stack","#stack"],["Resources & Communities","#resources"],["Future Automation","#automation"]].forEach(([label,href])=>{
+    foot.appendChild(el("a",{class:"jump-link", href:href, text:label, onclick:()=>{ setTimeout(()=>{ document.querySelector(href)?.scrollIntoView({behavior:"smooth"}); },10); }}));
+  });
+  rail.appendChild(foot);
+}
+
+/* ===================== render: main stage ===================== */
+let activeTab = "overview";
+const tabs = [["overview","Overview"],["tasks","Tasks"],["tools","AI Tools"],["prompts","Prompts"],["practice","Practices & Pitfalls"],["notes","Notes"]];
+
+function renderMain(){
+  const main = document.getElementById("main");
+  clear(main);
+
+  main.appendChild(el("section",{class:"hero"},[
+    el("div",{class:"hero-eyebrow",text:"AI Workflow Architect · Auto-Structured"}),
+    el("h1",{text:"Idea → MVP: The Solo Founder Validation Workflow"}),
+    el("p",{text:"An end-to-end, stage-by-stage system for turning a raw idea into a validated MVP — with the AI tools, prompts, and decision points for each step, so you build the right thing before you build the wrong thing well."}),
+    el("div",{class:"hero-stats"},[
+      hstat(stages.length, "Stages"),
+      hstat(stages.reduce((a,s)=>a+s.tasks.length,0), "Tasks"),
+      hstat(Math.round(overallProgress()*100)+"%", "Complete"),
+      hstat("2–6 wks", "Typical Timeline")
+    ])
+  ]));
+
+  const stage = stages[state.activeStage];
+  const p = taskProgress(stage);
+
+  main.appendChild(el("div",{class:"stage-header"},[
+    el("div",[
+      el("div",{class:"stage-num",text:"STAGE "+(state.activeStage+1)+" / "+stages.length}),
+      el("div",{class:"stage-title",text:stage.title}),
+      el("div",{class:"stage-sub",text:stage.sub})
+    ]),
+    el("div",{class:"stage-meta"},[
+      el("span",{class:"chip time",text:"⏱ "+stage.time}),
+      el("span",{class:"chip",text:p.done+"/"+p.total+" tasks done"})
+    ])
+  ]));
+
+  const tabRow = el("div",{class:"tabs"});
+  tabs.forEach(([id,label])=>{
+    tabRow.appendChild(el("button",{class:"tab-btn"+(activeTab===id?" active":""), onclick:()=>{ activeTab=id; renderMain(); }}, label));
+  });
+  main.appendChild(tabRow);
+
+  const content = el("div",{id:"tabContent"});
+  if(activeTab==="overview") content.appendChild(renderOverview(stage));
+  if(activeTab==="tasks") content.appendChild(renderTasks(stage));
+  if(activeTab==="tools") content.appendChild(renderTools(stage));
+  if(activeTab==="prompts") content.appendChild(renderPrompts(stage));
+  if(activeTab==="practice") content.appendChild(renderPractice(stage));
+  if(activeTab==="notes") content.appendChild(renderNotes(stage));
+  main.appendChild(content);
+
+  const navBtns = el("div",{class:"stage-nav-btns"},[
+    state.activeStage>0 ? el("button",{class:"btn", onclick:()=>{ state.activeStage--; saveState(); renderAll(); window.scrollTo({top:0,behavior:"smooth"}); }}, "← Previous Stage") : el("span"),
+    state.activeStage<stages.length-1 ? el("button",{class:"btn primary", onclick:()=>{ state.activeStage++; saveState(); renderAll(); window.scrollTo({top:0,behavior:"smooth"}); }}, "Next Stage →") : el("span")
+  ]);
+  main.appendChild(navBtns);
+
+  main.appendChild(renderDecisionTree());
+  main.appendChild(renderSummary());
+  main.appendChild(renderStack());
+  main.appendChild(renderResources());
+  main.appendChild(renderAutomation());
+}
+
+function hstat(v,l){ return el("div",{class:"hstat"},[el("div",{class:"v",text:String(v)}), el("div",{class:"l",text:l})]); }
+
+function renderOverview(stage){
+  const wrap = el("div");
+  wrap.appendChild(el("div",{class:"card"},[
+    el("h3",[el("span",{class:"dot"}),"Objectives"]),
+    el("ul",{class:"plain"}, stage.objectives.map(o=>el("li",{text:o})))
+  ]));
+  wrap.appendChild(el("div",{class:"card"},[
+    el("h3",[el("span",{class:"dot"}),"Expected Outputs"]),
+    el("ul",{class:"plain"}, stage.outputs.map(o=>el("li",{text:o})))
+  ]));
+  wrap.appendChild(el("div",{class:"card"},[
+    el("h3",[el("span",{class:"dot"}),"Efficiency Tips"]),
+    el("div",{}, stage.tips.map(t=>el("div",{class:"tip-item"},[el("span",{class:"b",text:"▲"}), el("span",{text:t})])))
+  ]));
+  return wrap;
+}
+
+function renderTasks(stage){
+  const wrap = el("div",{class:"card"});
+  wrap.appendChild(el("h3",[el("span",{class:"dot"}),"Task Checklist"]));
+  stage.tasks.forEach((t,i)=>{
+    const key = stage.id+"_"+i;
+    const bkKey = "task_"+key;
+    const checked = !!state.tasks[key];
+    const starred = !!state.bookmarks[bkKey];
+    const row = el("div",{class:"task-row"+(checked?" checked":"")},[
+      el("div",{class:"task-check"+(checked?" checked":""), onclick:(e)=>{ state.tasks[key] = !state.tasks[key]; saveState(); renderAll(); }}),
+      el("div",{class:"task-text",text:t}),
+      el("button",{class:"star-btn"+(starred?" on":""), title:"Bookmark", onclick:()=>{ 
+        if(state.bookmarks[bkKey]) delete state.bookmarks[bkKey];
+        else state.bookmarks[bkKey] = {stage:stage.title, text:t};
+        saveState(); renderAll();
+      }}, starred ? "★" : "☆")
+    ]);
+    wrap.appendChild(row);
+  });
+  return wrap;
+}
+
+function renderTools(stage){
+  const wrap = el("div",{class:"card"});
+  wrap.appendChild(el("h3",[el("span",{class:"dot"}),"Best AI Tools For This Stage"]));
+  stage.aiTools.forEach(tool=>{
+    wrap.appendChild(el("div",{class:"tool-card"},[
+      el("div",{class:"th"},[
+        el("div",{class:"tool-name",text:tool.name}),
+        el("div",{class:"tool-alt",text:"Alt: "+tool.alt})
+      ]),
+      el("div",{class:"tool-why",text:tool.why})
+    ]));
+  });
+  return wrap;
+}
+
+function renderPrompts(stage){
+  const wrap = el("div",{class:"card"});
+  wrap.appendChild(el("h3",[el("span",{class:"dot"}),"Prompt Examples"]));
+  stage.prompts.forEach((p,i)=>{
+    const block = el("div",{class:"prompt-block"},[
+      el("button",{class:"copy-btn", onclick:(e)=>{ 
+        navigator.clipboard?.writeText(p).then(()=>{ e.target.textContent="Copied"; setTimeout(()=>{ e.target.textContent="Copy"; },1400); });
+      }}, "Copy"),
+      el("span",{text:p})
+    ]);
+    wrap.appendChild(block);
+  });
+  return wrap;
+}
+
+function renderPractice(stage){
+  const wrap = el("div",{class:"grid2"});
+  wrap.appendChild(el("div",{class:"card"},[
+    el("h3",[el("span",{class:"dot"}),"Best Practices"]),
+    el("ul",{class:"plain"}, stage.bestPractices.map(b=>el("li",{text:b})))
+  ]));
+  const mCard = el("div",{class:"card"});
+  mCard.appendChild(el("h3",{text:"Common Mistakes"}));
+  stage.mistakes.forEach(m=>mCard.appendChild(el("div",{class:"mistake-item"},[el("span",{class:"x",text:"✕"}), el("span",{text:m})])));
+  wrap.appendChild(mCard);
+  return wrap;
+}
+
+function renderNotes(stage){
+  const wrap = el("div",{class:"card"});
+  wrap.appendChild(el("h3",[el("span",{class:"dot"}),"Your Notes"]));
+  const ta = el("textarea",{class:"notes", placeholder:"Jot findings, quotes, decisions, or links for this stage — saved automatically to this browser."});
+  ta.value = state.notes[stage.id] || "";
+  ta.addEventListener("input", ()=>{ state.notes[stage.id] = ta.value; saveState(); });
+  wrap.appendChild(ta);
+  wrap.appendChild(el("div",{class:"save-hint",text:"Autosaved locally · never leaves this device"}));
+  return wrap;
+}
+
+/* ===================== decision tree ===================== */
+let dtPath = [];
+function renderDecisionTree(){
+  const wrap = el("section",{id:"decision-tree", style:"margin-top:32px;"});
+  wrap.appendChild(sectionTitle("Interactive Decision Tree", "Should you go, iterate, pivot, or kill?"));
+  const box = el("div",{class:"dtree"});
+
+  let node = decisionTree;
+  const pathTrail = el("div",{class:"dtree-path"});
+  dtPath.forEach(p=>pathTrail.appendChild(el("span",{text:p})));
+  box.appendChild(pathTrail);
+
+  for(const step of dtPath){
+    if(node.result) break;
+    if(step==="Yes" && node.yes) node = node.yes;
+    else if(step==="No" && node.no) node = node.no;
+    else if(step==="Niche-but-real" && node["niche"]) node = node["niche"];
+    else if(step==="Not painful" && node["notPainful"]) node = node["notPainful"];
+  }
+
+  if(node.result){
+    box.appendChild(el("div",{class:"dtree-result"},[
+      el("div",{class:"rt",text:node.result}),
+      el("div",{text:node.detail})
+    ]));
+    box.appendChild(el("button",{class:"btn", style:"margin-top:14px;", onclick:()=>{ dtPath=[]; renderAll(); }}, "Start Over"));
+  } else {
+    box.appendChild(el("div",{class:"dtree-q", text:node.q}));
+    const opts = el("div",{class:"dtree-opts"});
+    let choices = ["Yes","No"];
+    if(node===decisionTree.no) choices = ["Niche-but-real","Not painful"];
+    choices.forEach(c=>{
+      opts.appendChild(el("button",{class:"dtree-opt", onclick:()=>{ dtPath.push(c); renderAll(); }}, c));
+    });
+    box.appendChild(opts);
+    if(dtPath.length>0){
+      box.appendChild(el("button",{class:"btn", onclick:()=>{ dtPath=[]; renderAll(); }}, "Reset"));
+    }
+  }
+  wrap.appendChild(box);
+  return wrap;
+}
+
+function sectionTitle(title, sub){
+  return el("div",{style:"margin-bottom:14px;"},[
+    el("div",{class:"stage-title", style:"font-size:21px;", text:title}),
+    sub ? el("div",{class:"stage-sub",text:sub}) : null
+  ]);
+}
+
+/* ===================== bottom sections ===================== */
+function renderSummary(){
+  const wrap = el("section",{id:"summary", style:"margin-top:36px;"});
+  wrap.appendChild(sectionTitle("Workflow Summary"));
+  wrap.appendChild(el("div",{class:"card"},[
+    el("p",{style:"color:var(--muted); font-size:14.5px; line-height:1.7;",
+      text:"This workflow takes a raw startup idea through eight stages: framing the problem precisely, researching the market, running real customer discovery, scoring the validation signal honestly, testing demand with a landing page before writing code, scoping a lean MVP, building it fast with AI-assisted tools, and closing the loop with a beta launch and an explicit go/iterate/pivot/kill decision. The core discipline throughout is sequencing — talk to humans and test demand before you build, and let evidence (not enthusiasm) drive every stage gate."})
+  ]));
+}
+
+const stackRows = [
+  ["Reasoning & Research","Claude","Structured thinking, research synthesis, and writing across every stage"],
+  ["Interview Transcription","Otter.ai / Fireflies.ai","Automatic transcription so you can stay present in interviews"],
+  ["Landing Page / No-Code","Framer or Carrd","Fast, no-code smoke-test pages published same-day"],
+  ["Coding & MVP Build","Claude Code / Cursor","In-editor AI pair programming for solo, fast shipping"],
+  ["Backend & Auth","Supabase","Database, auth, and storage without backend overhead"],
+  ["Deployment","Vercel / Netlify","One-command deploys with instant preview links"],
+  ["Analytics","PostHog","Funnels, retention, and session replay on a generous free tier"],
+  ["Feedback Surveys","Typeform / Tally","Fast structured feedback with conditional logic"]
+];
+function renderStack(){
+  const wrap = el("section",{id:"stack", style:"margin-top:36px;"});
+  wrap.appendChild(sectionTitle("Recommended AI Stack", "One tool per job — swap freely, but don't stack redundant tools."));
+  const card = el("div",{class:"card"});
+  const table = el("table",{class:"cmp"});
+  const thead = el("tr",{},[el("th",{text:"Job"}), el("th",{text:"Primary Tool"}), el("th",{text:"Why"})]);
+  table.appendChild(thead);
+  stackRows.forEach(r=>{
+    table.appendChild(el("tr",{},[el("td",{text:r[0]}), el("td",{text:r[1]}), el("td",{text:r[2]})]));
+  });
+  card.appendChild(table);
+  wrap.appendChild(card);
+  return wrap;
+}
+
+function renderResources(){
+  const wrap = el("section",{id:"resources", style:"margin-top:36px;"});
+  wrap.appendChild(sectionTitle("Learning Resources, Communities & Search Keywords"));
+  const grid = el("div",{class:"grid2"});
+  grid.appendChild(el("div",{class:"card"},[
+    el("h3",{text:"Learning Resources"}),
+    el("ul",{class:"plain"},[
+      el("li",{text:"\"The Mom Test\" — Rob Fitzpatrick, on running honest customer interviews"}),
+      el("li",{text:"\"Running Lean\" — Ash Maurya, on lean validation methodology"}),
+      el("li",{text:"Y Combinator's Startup School (free, self-paced video course)"}),
+      el("li",{text:"First Round Review — essays on early-stage product and GTM decisions"})
+    ])
+  ]));
+  const comm = el("div",{class:"card"});
+  comm.appendChild(el("h3",{text:"Communities"}));
+  comm.appendChild(el("ul",{class:"plain"},[
+    el("li",{text:"Indie Hackers — build-in-public founder community"}),
+    el("li",{text:"r/startups and r/SaaS on Reddit"}),
+    el("li",{text:"Product Hunt's Makers community"}),
+    el("li",{text:"Local or university founder/hackathon Discord and Slack groups"})
+  ]));
+  grid.appendChild(comm);
+  wrap.appendChild(grid);
+
+  const kw = el("div",{class:"card", style:"margin-top:16px;"});
+  kw.appendChild(el("h3",{text:"Search Keywords To Go Deeper"}));
+  const tagWrap = el("div");
+  ["customer discovery script","landing page smoke test","MVP scope cutting","lean startup validation","solo founder build in public","problem-solution fit interview questions","pre-launch waitlist conversion benchmark","retention curve day 7 SaaS"].forEach(k=>{
+    tagWrap.appendChild(el("span",{class:"tag",text:k}));
+  });
+  kw.appendChild(tagWrap);
+  wrap.appendChild(kw);
+  return wrap;
+}
+
+function renderAutomation(){
+  const wrap = el("section",{id:"automation", style:"margin-top:36px; margin-bottom:10px;"});
+  wrap.appendChild(sectionTitle("Additional AI Prompts & Future Automation Opportunities"));
+  const grid = el("div",{class:"grid2"});
+  grid.appendChild(el("div",{class:"card"},[
+    el("h3",{text:"Additional Prompts To Keep Handy"}),
+    el("div",{},[
+      "Summarize the last 5 entries in my notes across all stages and tell me what pattern or contradiction stands out.",
+      "Turn my validation memo into a one-page investor-ready update, written plainly, with no hype language.",
+      "I'm about to skip a validation step because I'm excited to build — argue the case for why I shouldn't."
+    ].map(p=>el("div",{class:"prompt-block"},[
+      el("button",{class:"copy-btn", onclick:(e)=>{ navigator.clipboard?.writeText(p).then(()=>{ e.target.textContent="Copied"; setTimeout(()=>{e.target.textContent="Copy";},1400); }); }}, "Copy"),
+      el("span",{text:p})
+    ])))
+  ]));
+  wrap.appendChild(el("div",{class:"card"},[
+    el("h3",{text:"Future Automation Opportunities"}),
+    el("ul",{class:"plain"},[
+      el("li",{text:"Auto-transcribe and tag interviews the moment a recording is uploaded"}),
+      el("li",{text:"Pipe landing-page signups directly into a scored lead database"}),
+      el("li",{text:"Weekly automated digest comparing analytics against your go/no-go thresholds"}),
+      el("li",{text:"Auto-draft beta feedback surveys triggered by a usage-based signal (e.g. after 3 sessions)"})
+    ])
+  ]));
+  grid && wrap.appendChild(grid);
+  return wrap;
+}
+
+/* ===================== bookmarks panel ===================== */
+function renderBookmarks(){
+  const list = document.getElementById("bmList");
+  clear(list);
+  const keys = Object.keys(state.bookmarks);
+  if(keys.length===0){
+    list.appendChild(el("p",{style:"color:var(--muted); font-size:13px;", text:"No bookmarks yet — star any task to save it here."}));
+    return;
+  }
+  keys.forEach(k=>{
+    const bm = state.bookmarks[k];
+    list.appendChild(el("div",{class:"bm-item"},[
+      el("div",{class:"bm-stage",text:bm.stage}),
+      el("div",{text:bm.text})
+    ]));
+  });
+}
+
+/* ===================== global controls ===================== */
+document.getElementById("themeToggle").addEventListener("click", ()=>{
+  const cur = document.body.getAttribute("data-theme");
+  const next = cur === "dark" ? "light" : "dark";
+  document.body.setAttribute("data-theme", next);
+  state.theme = next; saveState();
+});
+document.getElementById("printBtn").addEventListener("click", ()=>window.print());
+document.getElementById("bookmarkToggle").addEventListener("click", ()=>{
+  document.getElementById("bmPanel").classList.toggle("open");
+  renderBookmarks();
+});
+
+/* ===================== boot ===================== */
+function renderAll(){
+  renderMeter();
+  renderRail();
+  renderMain();
+  renderBookmarks();
+}
+document.body.setAttribute("data-theme", state.theme || "dark");
+renderAll();
+
+})();
+</script>
+</body>
+</html>
