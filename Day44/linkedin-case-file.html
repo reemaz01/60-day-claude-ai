@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The LinkedIn Case File</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #1f1a14;
+    --bg-panel: #241e17;
+    --bg-panel-2: #2b2319;
+    --manila: #d9c9a3;
+    --manila-dark: #c4b085;
+    --manila-shadow: #a89066;
+    --ink-red: #9c2b1f;
+    --ink-red-soft: #b5493c;
+    --ink-green: #35573f;
+    --ink-green-soft: #4a7359;
+    --gold: #b4893f;
+    --gold-bright: #d1a752;
+    --text-light: #efe6d3;
+    --text-dim: #a89878;
+    --text-dark: #2a2118;
+    --text-dark-soft: #4a3f30;
+    --paper: #ece3cc;
+    --paper-line: rgba(42,33,24,0.12);
+    --radius: 3px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(180,137,63,0.06), transparent 55%),
+      radial-gradient(ellipse at 80% 100%, rgba(156,43,31,0.05), transparent 55%);
+    color: var(--text-light);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 32px 16px 80px;
+  }
+  .stamp-font{ font-family: 'Special Elite', monospace; }
+  .mono{ font-family: 'JetBrains Mono', monospace; }
+
+  #root{ max-width: 860px; margin: 0 auto; }
+
+  /* ---------- Shared bits ---------- */
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold-bright);
+    margin: 0 0 10px;
+  }
+  .btn{
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    padding: 14px 26px;
+    border-radius: var(--radius);
+    border: 2px solid var(--gold);
+    background: transparent;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: transform 0.12s ease, background 0.15s ease, color 0.15s ease;
+  }
+  .btn:hover{ background: var(--gold); color: var(--text-dark); }
+  .btn:active{ transform: scale(0.97); }
+  .btn.primary{ background: var(--gold); color: var(--text-dark); }
+  .btn.primary:hover{ background: var(--gold-bright); }
+  .btn.small{ padding: 8px 16px; font-size: 12px; }
+  .btn[disabled]{ opacity: 0.4; cursor: not-allowed; }
+  .btn.ghost{ border-color: var(--text-dim); color: var(--text-dim); }
+  .btn.ghost:hover{ background: var(--text-dim); color: var(--bg); }
+
+  /* ---------- Landing (closed folder) ---------- */
+  .landing{
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    padding: 60px 20px 20px;
+  }
+  .badge-seal{
+    width: 74px; height: 74px; border-radius: 50%;
+    border: 2px solid var(--gold);
+    display:flex; align-items:center; justify-content:center;
+    color: var(--gold-bright); font-family:'Special Elite',monospace; font-size: 10px;
+    letter-spacing: 0.08em; text-align:center; line-height:1.3; margin-bottom: 26px;
+    transform: rotate(-6deg);
+  }
+  .landing h1{
+    font-family: 'Special Elite', monospace;
+    font-size: clamp(30px, 6vw, 46px);
+    margin: 0 0 14px;
+    color: var(--text-light);
+    letter-spacing: 0.01em;
+  }
+  .landing p.sub{
+    color: var(--text-dim); font-size: 16px; max-width: 480px; line-height: 1.6; margin: 0 0 34px;
+  }
+  .folder-preview{
+    position: relative; width: min(420px, 90vw); height: 260px; margin: 0 auto 40px;
+    cursor: pointer;
+  }
+  .folder-tab-top{
+    position:absolute; top:0; left: 24px; width: 140px; height: 34px;
+    background: var(--manila-dark);
+    border-radius: 6px 6px 0 0;
+    border: 1px solid var(--manila-shadow);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.08em;
+    color: var(--text-dark-soft);
+  }
+  .folder-body{
+    position:absolute; top: 28px; left:0; right:0; bottom:0;
+    background: var(--manila);
+    border-radius: 4px;
+    border: 1px solid var(--manila-shadow);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.05);
+    display:flex; align-items:center; justify-content:center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .folder-preview:hover .folder-body{ transform: translateY(-4px); box-shadow: 0 24px 50px rgba(0,0,0,0.5); }
+  .folder-body .stamp-label{
+    font-family:'Special Elite',monospace; color: var(--ink-red);
+    font-size: 15px; letter-spacing:0.1em; border: 3px solid var(--ink-red);
+    padding: 8px 18px; transform: rotate(-8deg); opacity: 0.85; border-radius: 4px;
+  }
+
+  /* ---------- Question wizard ---------- */
+  .wizard-wrap{ max-width: 620px; margin: 40px auto 0; }
+  .progress-row{ display:flex; gap:6px; margin-bottom: 28px; }
+  .progress-dot{ height:4px; flex:1; background: var(--bg-panel-2); border-radius: 2px; overflow:hidden; }
+  .progress-dot.done, .progress-dot.active{ background: var(--gold); }
+  .index-card{
+    background: var(--paper); color: var(--text-dark);
+    border-radius: 4px; padding: 34px 30px 28px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    position: relative;
+  }
+  .index-card::before{
+    content:''; position:absolute; left:0; top: 58px; right:0; height:1px; background: var(--paper-line);
+  }
+  .index-card .q-num{
+    font-family:'JetBrains Mono',monospace; font-size:11px; color: var(--ink-red);
+    letter-spacing: 0.1em; margin-bottom: 8px; display:block;
+  }
+  .index-card h2{
+    font-family:'Special Elite', monospace; font-size: 21px; margin: 0 0 22px; line-height:1.4;
+    color: var(--text-dark);
+  }
+  .index-card textarea, .index-card input[type=text]{
+    width:100%; font-family:'Inter',sans-serif; font-size:15px; color: var(--text-dark);
+    background: transparent; border: none; border-bottom: 1px solid var(--paper-line);
+    padding: 8px 2px 12px; resize: vertical; min-height: 46px;
+  }
+  .index-card textarea:focus, .index-card input:focus{ outline:none; border-bottom-color: var(--ink-red); }
+  .index-card .hint{ font-size: 12px; color: var(--text-dark-soft); margin-top: 8px; opacity:0.75; }
+  .wizard-actions{ display:flex; justify-content: space-between; align-items:center; margin-top: 22px; }
+  .step-count{ font-family:'JetBrains Mono',monospace; font-size:11px; color: var(--text-dim); }
+
+  /* ---------- Loading ---------- */
+  .loading-wrap{ text-align:center; padding: 90px 20px; }
+  .stamp-anim{
+    width:110px; height:110px; margin: 0 auto 26px; border-radius:50%;
+    border: 3px solid var(--gold); display:flex; align-items:center; justify-content:center;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{ transform: scale(1); opacity: 0.7;} 50%{ transform: scale(1.08); opacity:1; } }
+  .loading-wrap p{ font-family:'JetBrains Mono',monospace; font-size:13px; color: var(--text-dim); letter-spacing:0.04em; }
+
+  /* ---------- Results shell ---------- */
+  .case-header{ text-align:center; margin-bottom: 26px; }
+  .case-header h1{ font-family:'Special Elite',monospace; font-size: 28px; margin: 6px 0 4px; }
+  .case-header .sub{ color: var(--text-dim); font-size: 13px; }
+
+  .tabs{ display:flex; gap: 4px; overflow-x:auto; margin-bottom: 0; padding: 0 4px; }
+  .tab-btn{
+    font-family:'JetBrains Mono',monospace; font-size: 11px; letter-spacing:0.06em; text-transform:uppercase;
+    padding: 12px 16px 10px; background: var(--bg-panel-2); color: var(--text-dim);
+    border: none; border-radius: 6px 6px 0 0; cursor:pointer; white-space:nowrap;
+    border-bottom: 3px solid transparent;
+  }
+  .tab-btn.active{ background: var(--paper); color: var(--text-dark); border-bottom-color: var(--ink-red); }
+  .tab-panel{
+    background: var(--paper); color: var(--text-dark); border-radius: 0 4px 4px 4px;
+    padding: 30px clamp(18px,4vw,40px); box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+  }
+  .tab-panel h3.section-title{
+    font-family:'Special Elite',monospace; font-size: 19px; margin: 0 0 4px; color: var(--text-dark);
+  }
+  .tab-panel p.section-desc{ color: var(--text-dark-soft); font-size:13px; margin: 0 0 22px; }
+
+  /* Score dial */
+  .overall-score{
+    display:flex; align-items:center; gap: 20px; margin-bottom: 26px; padding-bottom: 22px;
+    border-bottom: 1px dashed var(--paper-line);
+  }
+  .score-stamp{
+    width: 88px; height:88px; border-radius:50%; border: 3px solid var(--ink-red); color: var(--ink-red);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; flex-shrink:0;
+    transform: rotate(-5deg); font-family:'Special Elite',monospace;
+  }
+  .score-stamp .num{ font-size: 22px; line-height:1; }
+  .score-stamp .of{ font-size: 9px; letter-spacing:0.08em; }
+  .score-stamp.green{ border-color: var(--ink-green); color: var(--ink-green); }
+
+  /* Roast card per section */
+  .roast-block{ margin-bottom: 26px; padding-bottom: 22px; border-bottom: 1px solid var(--paper-line); }
+  .roast-block:last-child{ border-bottom:none; margin-bottom:0; padding-bottom:0; }
+  .roast-block-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 10px; flex-wrap:wrap; gap:8px; }
+  .roast-block-head h4{ font-family:'Special Elite',monospace; font-size:15px; margin:0; color:var(--text-dark); }
+  .score-pill{
+    font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; color: var(--ink-red);
+    border: 1.5px solid var(--ink-red); border-radius: 20px; padding: 3px 12px;
+  }
+  .roast-line{ font-size: 14px; line-height:1.65; margin: 0 0 8px; color: var(--text-dark); }
+  .roast-line .tag{ font-weight:700; margin-right: 6px; }
+
+  /* Rebuild cards */
+  .rebuild-option{
+    background: rgba(53,87,63,0.06); border-left: 3px solid var(--ink-green);
+    padding: 14px 16px; margin-bottom: 14px; border-radius: 0 4px 4px 0;
+  }
+  .rebuild-option .opt-label{ font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase;
+    letter-spacing:0.06em; color: var(--ink-green); margin-bottom:6px; display:block; }
+  .rebuild-option .opt-text{ font-size: 15px; font-weight:600; margin: 0 0 8px; line-height:1.5; }
+  .rebuild-option .opt-when{ font-size: 12.5px; color: var(--text-dark-soft); margin:0; }
+
+  .before-after{ margin-bottom: 14px; }
+  .before-after .ba-before{ font-size:13.5px; color: var(--ink-red-soft); text-decoration: line-through wavy 1px; margin: 0 0 4px; line-height:1.5; }
+  .before-after .ba-after{ font-size:14.5px; color: var(--ink-green); font-weight:600; margin:0; line-height:1.55; }
+  .arrow-down{ font-size:11px; color: var(--text-dim); margin: 2px 0; font-family:'JetBrains Mono',monospace; }
+
+  .keyword-chip{
+    display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11px;
+    background: rgba(180,137,63,0.18); color: var(--text-dark-soft); border:1px solid var(--gold);
+    border-radius: 20px; padding: 3px 10px; margin: 3px 4px 3px 0;
+  }
+  .skill-chip.add{ background: rgba(53,87,63,0.15); border-color: var(--ink-green); color: var(--ink-green); }
+  .skill-chip.remove{ background: rgba(156,43,31,0.1); border-color: var(--ink-red); color: var(--ink-red); text-decoration: line-through; }
+
+  .about-block{ background: rgba(0,0,0,0.03); border-radius:4px; padding: 16px 18px; margin-top: 6px; }
+  .about-block p{ font-size:14.5px; line-height:1.7; margin:0 0 10px; white-space:pre-wrap; }
+
+  /* Scorecard table */
+  .score-table{ width:100%; border-collapse:collapse; margin-bottom: 20px; }
+  .score-table th{ text-align:left; font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase;
+    letter-spacing:0.05em; color: var(--text-dark-soft); padding: 6px 8px; border-bottom: 1px solid var(--paper-line); }
+  .score-table td{ padding: 10px 8px; font-size: 14px; border-bottom: 1px solid var(--paper-line); }
+  .score-table td.delta{ font-weight:700; color: var(--ink-green); font-family:'JetBrains Mono',monospace; }
+  .score-table tr.overall-row td{ font-weight:800; font-size:15px; padding-top:14px; }
+
+  /* Plan */
+  .day-card{
+    border: 1px solid var(--paper-line); border-radius: 4px; padding: 16px 18px; margin-bottom: 14px;
+    background: rgba(0,0,0,0.02);
+  }
+  .day-card .day-label{ font-family:'Special Elite',monospace; font-size:14px; color: var(--ink-red); margin: 0 0 8px; }
+  .day-card ul{ margin: 6px 0 0; padding-left: 18px; }
+  .day-card li{ font-size:13.5px; margin-bottom: 5px; line-height:1.5; }
+  .post-draft{ background: var(--bg-panel); color: var(--text-light); border-radius:4px; padding: 14px 16px; margin-top:8px;
+    font-size:13.5px; line-height:1.65; white-space: pre-wrap; position:relative; }
+  .copy-btn{
+    position:absolute; top:10px; right:10px; font-family:'JetBrains Mono',monospace; font-size:10px;
+    background: var(--gold); color: var(--text-dark); border:none; border-radius:3px; padding: 5px 9px; cursor:pointer;
+  }
+  .post-draft-wrap{ position:relative; }
+
+  /* Summary card */
+  .summary-sheet{
+    background: var(--bg-panel); color: var(--text-light); border-radius: 6px; padding: 26px 24px;
+    border: 1px dashed var(--gold); position: relative;
+  }
+  .summary-sheet h4{ font-family:'Special Elite',monospace; font-size:16px; margin:0 0 14px; color: var(--gold-bright); }
+  .summary-sheet .before-after-big{ display:flex; gap: 30px; margin-bottom: 18px; }
+  .summary-sheet .ba-item{ text-align:center; }
+  .summary-sheet .ba-item .n{ font-family:'JetBrains Mono',monospace; font-size: 26px; font-weight:700; }
+  .summary-sheet .ba-item.before .n{ color: var(--ink-red-soft); }
+  .summary-sheet .ba-item.after .n{ color: var(--ink-green-soft); }
+  .summary-sheet .ba-item .l{ font-size:10px; letter-spacing:0.08em; text-transform:uppercase; color: var(--text-dim); margin-top:4px; }
+  .summary-sheet ol{ padding-left: 20px; margin: 0 0 16px; }
+  .summary-sheet li{ font-size: 13.5px; margin-bottom: 6px; line-height:1.5; }
+  .summary-sheet .biggest{ font-size: 14px; font-style: italic; color: var(--text-light); border-top:1px dashed var(--gold); padding-top:14px; }
+
+  .error-box{
+    background: rgba(156,43,31,0.1); border: 1px solid var(--ink-red); border-radius:4px;
+    padding: 18px 20px; color: var(--text-light); font-size: 13.5px; margin-top: 20px; line-height:1.6;
+  }
+
+  .footer-actions{ display:flex; justify-content:center; margin-top: 24px; }
+
+  @media (max-width: 560px){
+    body{ padding: 20px 10px 60px; }
+    .tabs{ gap:2px; }
+    .tab-btn{ padding: 10px 10px 8px; font-size: 10px; }
+    .summary-sheet .before-after-big{ gap: 18px; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  const root = document.getElementById('root');
+
+  const QUESTIONS_HAS = [
+    { key:'headline', label:'Question 1 of 5', title:'Paste your current LinkedIn headline.', hint:'The line right under your name.', multiline:false },
+    { key:'about', label:'Question 2 of 5', title:'Paste your About section, word for word.', hint:'Copy-paste exactly as it appears — don\u2019t clean it up first.', multiline:true },
+    { key:'experience', label:'Question 3 of 5', title:'Paste your most recent Experience entry \u2014 title, company, and every bullet.', hint:'Include the job title, company name, and all bullet points.', multiline:true },
+    { key:'skills', label:'Question 4 of 5', title:'List your top skills, 5 to 10 of them.', hint:'Comma-separated is fine.', multiline:true },
+    { key:'goal', label:'Question 5 of 5', title:'What\u2019s the target goal? A job, clients, thought leadership, or network growth?', hint:'Be specific if you can \u2014 e.g. "Product Manager roles at mid-size SaaS companies."', multiline:true }
+  ];
+
+  const QUESTIONS_NO = [
+    { key:'name_role', label:'Question 1 of 5', title:'Your name, and your current role or student status.', hint:'e.g. "Reemaz, final-year CS student" or "Reemaz, freelance frontend developer."', multiline:false },
+    { key:'top_skills', label:'Question 2 of 5', title:'Your top 3 skills.', hint:'', multiline:false },
+    { key:'achievements', label:'Question 3 of 5', title:'1\u20132 achievements or projects you\u2019re proud of.', hint:'Numbers and specifics help, even rough estimates.', multiline:true },
+    { key:'audience', label:'Question 4 of 5', title:'Who do you want to attract \u2014 recruiters, clients, or collaborators?', hint:'', multiline:false },
+    { key:'differentiator', label:'Question 5 of 5', title:'One sentence: what makes you different?', hint:'', multiline:true }
+  ];
+
+  let state = {
+    step: 'landing',       // landing | branch | questions | loading | results | error
+    hasLinkedIn: null,
+    qIndex: 0,
+    answers: {},
+    data: null,
+    activeTab: 'roast',
+    errorMsg: ''
+  };
+
+  function el(tag, props, children){
+    const node = document.createElement(tag);
+    if (props){
+      Object.keys(props).forEach(function(k){
+        if (k === 'class') node.className = props[k];
+        else if (k === 'text') node.textContent = props[k];
+        else if (k.indexOf('on') === 0 && typeof props[k] === 'function') node.addEventListener(k.slice(2), props[k]);
+        else if (k === 'html') { /* explicitly disallowed - never used */ }
+        else node.setAttribute(k, props[k]);
+      });
+    }
+    (children || []).forEach(function(c){
+      if (c === null || c === undefined) return;
+      if (typeof c === 'string') node.appendChild(document.createTextNode(c));
+      else node.appendChild(c);
+    });
+    return node;
+  }
+
+  function render(){
+    root.textContent = '';
+    if (state.step === 'landing') root.appendChild(renderLanding());
+    else if (state.step === 'branch') root.appendChild(renderBranch());
+    else if (state.step === 'questions') root.appendChild(renderQuestions());
+    else if (state.step === 'loading') root.appendChild(renderLoading());
+    else if (state.step === 'results') root.appendChild(renderResults());
+    else if (state.step === 'error') root.appendChild(renderErrorScreen());
+  }
+
+  // ---------------- Landing ----------------
+  function renderLanding(){
+    const wrap = el('div', {class:'landing'});
+    const seal = el('div', {class:'badge-seal'}, ['CASE', document.createElement('br'), 'FILE']);
+    wrap.appendChild(seal);
+    wrap.appendChild(el('h1', {}, ['The LinkedIn Case File']));
+    wrap.appendChild(el('p', {class:'sub'}, ['Twenty years of reviewing profiles, distilled into one honest read. I\u2019ll roast what\u2019s not working, rebuild it line by line, and hand you a 7-day plan to put it to work.']));
+
+    const folder = el('div', {class:'folder-preview', onclick: function(){ state.step='branch'; render(); }});
+    folder.appendChild(el('div', {class:'folder-tab-top'}, ['EXHIBIT A']));
+    const body = el('div', {class:'folder-body'});
+    body.appendChild(el('div', {class:'stamp-label'}, ['OPEN FILE']));
+    folder.appendChild(body);
+    wrap.appendChild(folder);
+
+    wrap.appendChild(el('button', {class:'btn primary', onclick: function(){ state.step='branch'; render(); }}, ['Open the case file \u2192']));
+    return wrap;
+  }
+
+  // ---------------- Branch select ----------------
+  function renderBranch(){
+    const wrap = el('div', {class:'wizard-wrap'});
+    const card = el('div', {class:'index-card'});
+    card.appendChild(el('span', {class:'q-num'}, ['BEFORE WE START']));
+    card.appendChild(el('h2', {}, ['Do you already have a LinkedIn profile?']));
+    card.appendChild(el('p', {class:'hint'}, ['If you do, I\u2019ll ask for what\u2019s already on it. If not, I\u2019ll build your positioning from scratch.']));
+    const btnRow = el('div', {style:'display:flex; gap:12px; margin-top:22px; flex-wrap:wrap;'});
+    btnRow.appendChild(el('button', {class:'btn primary', onclick: function(){
+      state.hasLinkedIn = true; state.step='questions'; state.qIndex=0; render();
+    }}, ['Yes, I have one']));
+    btnRow.appendChild(el('button', {class:'btn ghost', onclick: function(){
+      state.hasLinkedIn = false; state.step='questions'; state.qIndex=0; render();
+    }}, ['No, starting fresh']));
+    card.appendChild(btnRow);
+    wrap.appendChild(card);
+    return wrap;
+  }
+
+  // ---------------- Questions ----------------
+  function currentQuestionList(){ return state.hasLinkedIn ? QUESTIONS_HAS : QUESTIONS_NO; }
+
+  function renderQuestions(){
+    const list = currentQuestionList();
+    const q = list[state.qIndex];
+    const wrap = el('div', {class:'wizard-wrap'});
+
+    const progressRow = el('div', {class:'progress-row'});
+    list.forEach(function(_, i){
+      const dot = el('div', {class:'progress-dot' + (i < state.qIndex ? ' done' : (i === state.qIndex ? ' active' : ''))});
+      progressRow.appendChild(dot);
+    });
+    wrap.appendChild(progressRow);
+
+    const card = el('div', {class:'index-card'});
+    card.appendChild(el('span', {class:'q-num'}, [q.label]));
+    card.appendChild(el('h2', {}, [q.title]));
+
+    const input = q.multiline
+      ? el('textarea', {rows: 5, placeholder:'Type your answer here\u2026'})
+      : el('input', {type:'text', placeholder:'Type your answer here\u2026'});
+    input.value = state.answers[q.key] || '';
+    card.appendChild(input);
+    if (q.hint) card.appendChild(el('p', {class:'hint'}, [q.hint]));
+
+    const actions = el('div', {class:'wizard-actions'});
+    const back = el('button', {class:'btn ghost small', onclick: function(){
+      state.answers[q.key] = input.value;
+      if (state.qIndex === 0){ state.step = 'branch'; } else { state.qIndex -= 1; }
+      render();
+    }}, ['\u2190 Back']);
+    const next = el('button', {class:'btn primary', onclick: function(){
+      const val = input.value.trim();
+      if (!val){ input.focus(); input.style.borderBottomColor = 'var(--ink-red)'; return; }
+      state.answers[q.key] = val;
+      if (state.qIndex < list.length - 1){
+        state.qIndex += 1; render();
+      } else {
+        state.step = 'loading'; render();
+        runAnalysis();
+      }
+    }}, [state.qIndex < list.length - 1 ? 'Next \u2192' : 'Submit for review \u2192']);
+
+    actions.appendChild(back);
+    actions.appendChild(el('div', {class:'step-count'}, [(state.qIndex+1) + ' / ' + list.length]));
+    actions.appendChild(next);
+    card.appendChild(actions);
+    wrap.appendChild(card);
+    return wrap;
+  }
+
+  // ---------------- Loading ----------------
+  function renderLoading(){
+    const wrap = el('div', {class:'loading-wrap'});
+    const stamp = el('div', {class:'stamp-anim'});
+    stamp.appendChild(el('span', {class:'stamp-font', style:'font-size:11px; color: var(--gold-bright);'}, ['REVIEW']));
+    wrap.appendChild(stamp);
+    wrap.appendChild(el('p', {}, ['Reading your profile the way a recruiter actually would\u2026']));
+    return wrap;
+  }
+
+  function renderErrorScreen(){
+    const wrap = el('div', {class:'wizard-wrap'});
+    const box = el('div', {class:'error-box'});
+    box.appendChild(el('p', {}, ['The review couldn\u2019t be completed. ' + (state.errorMsg || '')]));
+    wrap.appendChild(box);
+    const btn = el('button', {class:'btn primary', style:'margin-top:16px;', onclick: function(){
+      state.step = 'loading'; render(); runAnalysis();
+    }}, ['Try again']);
+    wrap.appendChild(btn);
+    return wrap;
+  }
+
+  // ---------------- Build prompt & call API ----------------
+  function buildPrompt(){
+    const list = currentQuestionList();
+    const lines = [];
+    list.forEach(function(q){
+      lines.push('- ' + q.title.replace(/\u2026$/, '') + ' => ' + (state.answers[q.key] || ''));
+    });
+    const profileBlock = lines.join('\n');
+    const branchNote = state.hasLinkedIn
+      ? 'The user already has a LinkedIn profile. The five answers below map to: current headline, About section, most recent experience entry, top skills, and target goal.'
+      : 'The user does NOT yet have a LinkedIn profile. The five answers below map to: name and role/student status, top 3 skills, achievements/projects, who they want to attract, and their differentiator. Since there is no existing profile to roast, treat "before" as their current lack of positioning / a generic unoptimized profile a beginner in their position would typically have, and score accordingly \u2014 be specific about what a blank or generic profile in their position usually gets wrong, without inventing quotes they never gave you.';
+
+    return [
+      'You are a LinkedIn Optimization Expert, Personal Branding Consultant, and ex-recruiter who has reviewed 50,000+ profiles.',
+      'Your job: roast the profile honestly, rebuild it, and produce a 7-day activation plan.',
+      branchNote,
+      '',
+      'USER-PROVIDED INFORMATION:',
+      profileBlock,
+      '',
+      'Rules:',
+      '- Use ONLY information the user provided. Never invent achievements, roles, companies, or metrics.',
+      '- If information is missing or thin, note what to add rather than fabricating specifics.',
+      '- Tone: direct, specific, like a brutally honest friend who wants them to succeed. Zero fluff. Quote their own words back at them where relevant (only if hasLinkedIn is true and they gave you real text).',
+      '- Keep every array item concise (1-3 sentences max unless it is a full post draft).',
+      '',
+      'Respond with ONLY a single valid JSON object, no markdown code fences, no preamble, no commentary \u2014 matching EXACTLY this schema:',
+      '',
+      '{',
+      '  "before_scores": {"headline": 0, "about_hook": 0, "about_full": 0, "experience": 0, "skills": 0, "overall": 0},',
+      '  "roast": {',
+      '    "headline": {"problem": "", "why_it_hurts": "", "invisible_cost": ""},',
+      '    "about_hook": {"problem": "", "why_it_hurts": "", "invisible_cost": ""},',
+      '    "about_full": {"problem": "", "why_it_hurts": "", "invisible_cost": ""},',
+      '    "experience": {"problem": "", "why_it_hurts": "", "invisible_cost": ""},',
+      '    "skills": {"problem": "", "why_it_hurts": "", "invisible_cost": ""}',
+      '  },',
+      '  "rebuild": {',
+      '    "headlines": [',
+      '      {"type": "Keyword-Optimized", "text": "", "when_to_use": ""},',
+      '      {"type": "Value-Proposition", "text": "", "when_to_use": ""},',
+      '      {"type": "Authority", "text": "", "when_to_use": ""}',
+      '    ],',
+      '    "about": {"hook": "", "story": "", "proof": "", "cta": "", "full_text": "", "keywords": ["", ""]},',
+      '    "experience_bullets": [{"before": "", "after": ""}],',
+      '    "skills": {"add": ["", "", "", "", "", "", "", "", "", ""], "remove": ["", ""], "pin_top_3": ["", "", ""]}',
+      '  },',
+      '  "after_scores": {"headline": 0, "about_hook": 0, "about_full": 0, "experience": 0, "skills": 0, "overall": 0},',
+      '  "plan": {',
+      '    "day1_checklist": ["", "", "", ""],',
+      '    "day2_post": "",',
+      '    "day3": {"targets": "", "message_template": ""},',
+      '    "day4_value_comment_formula": "",',
+      '    "day5_post": "",',
+      '    "day6": "",',
+      '    "day7": ""',
+      '  },',
+      '  "summary_card": {"top_mistakes": ["", "", ""], "biggest_difference": ""}',
+      '}',
+      '',
+      'Constraints on values: all scores are integers, section scores 0-10, overall 0-100. "experience_bullets" should have between 2 and 5 items, one per bullet the user actually gave you. day2_post and day5_post must each be under 1300 characters and end with a comment-driving hook. day3.message_template must be under 300 characters. Do not wrap the JSON in backticks.'
+    ].join('\n');
+  }
+
+  function callClaude(prompt){
+    return fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 4000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    })
+    .then(function(res){
+      if (!res.ok){
+        return res.text().then(function(bodyText){
+          let detail = bodyText;
+          try{ detail = JSON.parse(bodyText).error.message; }catch(e){}
+          throw new Error('API returned ' + res.status + ': ' + detail);
+        });
+      }
+      return res.json();
+    })
+    .then(function(data){
+      let text = '';
+      if (data && data.content){
+        data.content.forEach(function(block){ if (block.type === 'text') text += block.text; });
+      }
+      text = text.trim().replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
+      let parsed;
+      try{ parsed = JSON.parse(text); }
+      catch(e){ throw new Error('Got a response back but couldn\u2019t read it as JSON. The model may have added extra text around the JSON.'); }
+      return parsed;
+    });
+  }
+
+  function runAnalysis(attempt){
+    attempt = attempt || 1;
+    const prompt = buildPrompt();
+    callClaude(prompt)
+      .then(function(parsed){
+        state.data = parsed;
+        state.step = 'results';
+        state.activeTab = 'roast';
+        render();
+      })
+      .catch(function(err){
+        const isNetworkError = err instanceof TypeError; // "Failed to fetch" etc.
+        if (isNetworkError && attempt < 3){
+          // transient network hiccup - retry automatically with a short backoff
+          setTimeout(function(){ runAnalysis(attempt + 1); }, 900 * attempt);
+          return;
+        }
+        state.errorMsg = isNetworkError
+          ? 'The request to the review service didn\u2019t go through (network error), even after ' + attempt + ' attempt(s). This usually clears up on retry \u2014 if it keeps happening, try reopening this file from the chat rather than a downloaded copy.'
+          : ((err && err.message) ? err.message : 'Unknown error.');
+        state.step = 'error';
+        render();
+      });
+  }
+
+  // ---------------- Results ----------------
+  function renderResults(){
+    const d = state.data;
+    const wrap = el('div', {});
+    const header = el('div', {class:'case-header'});
+    header.appendChild(el('p', {class:'eyebrow'}, ['CASE FILE \u2014 REVIEW COMPLETE']));
+    header.appendChild(el('h1', {}, ['Verdict on Your Profile']));
+    header.appendChild(el('p', {class:'sub'}, ['Overall: ' + d.before_scores.overall + '/100 \u2192 ' + d.after_scores.overall + '/100 after the rebuild']));
+    wrap.appendChild(header);
+
+    const tabs = [
+      {key:'roast', label:'01 The Roast'},
+      {key:'rebuild', label:'02 The Rebuild'},
+      {key:'scorecard', label:'03 Scorecard'},
+      {key:'plan', label:'04 7-Day Plan'},
+      {key:'summary', label:'05 Summary'}
+    ];
+    const tabRow = el('div', {class:'tabs'});
+    tabs.forEach(function(t){
+      tabRow.appendChild(el('button', {
+        class: 'tab-btn' + (state.activeTab === t.key ? ' active' : ''),
+        onclick: function(){ state.activeTab = t.key; render(); }
+      }, [t.label]));
+    });
+    wrap.appendChild(tabRow);
+
+    const panel = el('div', {class:'tab-panel'});
+    if (state.activeTab === 'roast') panel.appendChild(buildRoastPanel(d));
+    else if (state.activeTab === 'rebuild') panel.appendChild(buildRebuildPanel(d));
+    else if (state.activeTab === 'scorecard') panel.appendChild(buildScorecardPanel(d));
+    else if (state.activeTab === 'plan') panel.appendChild(buildPlanPanel(d));
+    else if (state.activeTab === 'summary') panel.appendChild(buildSummaryPanel(d));
+    wrap.appendChild(panel);
+
+    const footer = el('div', {class:'footer-actions'});
+    footer.appendChild(el('button', {class:'btn ghost small', onclick: function(){
+      state = {step:'landing', hasLinkedIn:null, qIndex:0, answers:{}, data:null, activeTab:'roast', errorMsg:''};
+      render();
+    }}, ['Start a new case file']));
+    wrap.appendChild(footer);
+
+    return wrap;
+  }
+
+  function buildRoastPanel(d){
+    const frag = el('div', {});
+    frag.appendChild(el('h3', {class:'section-title'}, ['Profile Report Card']));
+    frag.appendChild(el('p', {class:'section-desc'}, ['What a recruiter thinks in the first three seconds, section by section.']));
+
+    const overall = el('div', {class:'overall-score'});
+    const stamp = el('div', {class:'score-stamp'});
+    stamp.appendChild(el('span', {class:'num'}, [String(d.before_scores.overall)]));
+    stamp.appendChild(el('span', {class:'of'}, ['/ 100 OVERALL']));
+    overall.appendChild(stamp);
+    overall.appendChild(el('p', {style:'font-size:13.5px; color:var(--text-dark-soft); margin:0; max-width:420px; line-height:1.6;'}, ['This is where the profile stands today \u2014 before any of the rebuild. See the Scorecard tab for the full before/after breakdown.']));
+    frag.appendChild(overall);
+
+    const sections = [
+      {key:'headline', label:'Headline', score: d.before_scores.headline},
+      {key:'about_hook', label:'About \u2014 First 2 Lines', score: d.before_scores.about_hook},
+      {key:'about_full', label:'About \u2014 Full Section', score: d.before_scores.about_full},
+      {key:'experience', label:'Experience', score: d.before_scores.experience},
+      {key:'skills', label:'Skills & Keywords', score: d.before_scores.skills}
+    ];
+    sections.forEach(function(s){
+      const r = d.roast[s.key];
+      const block = el('div', {class:'roast-block'});
+      const head = el('div', {class:'roast-block-head'});
+      head.appendChild(el('h4', {}, [s.label]));
+      head.appendChild(el('span', {class:'score-pill'}, [s.score + ' / 10']));
+      block.appendChild(head);
+      block.appendChild(el('p', {class:'roast-line'}, [el('span', {class:'tag', style:'color:var(--ink-red);'}, ['\u274c']), r.problem]));
+      block.appendChild(el('p', {class:'roast-line'}, [el('span', {class:'tag'}, ['\ud83e\udde0']), r.why_it_hurts]));
+      block.appendChild(el('p', {class:'roast-line', style:'margin-bottom:0;'}, [el('span', {class:'tag'}, ['\ud83d\udd0d']), r.invisible_cost]));
+      frag.appendChild(block);
+    });
+    return frag;
+  }
+
+  function buildRebuildPanel(d){
+    const frag = el('div', {});
+    frag.appendChild(el('h3', {class:'section-title'}, ['The Rebuild']));
+    frag.appendChild(el('p', {class:'section-desc'}, ['Every section rewritten, with the strategy behind each choice.']));
+
+    // Headlines
+    frag.appendChild(el('h4', {style:'font-family:Special Elite,monospace; font-size:14px; margin:18px 0 10px;'}, ['Headline \u2014 3 options']));
+    d.rebuild.headlines.forEach(function(h){
+      const opt = el('div', {class:'rebuild-option'});
+      opt.appendChild(el('span', {class:'opt-label'}, [h.type]));
+      opt.appendChild(el('p', {class:'opt-text'}, [h.text]));
+      opt.appendChild(el('p', {class:'opt-when'}, ['When to use: ' + h.when_to_use]));
+      frag.appendChild(opt);
+    });
+
+    // About
+    frag.appendChild(el('h4', {style:'font-family:Special Elite,monospace; font-size:14px; margin:22px 0 10px;'}, ['About section']));
+    const aboutBlock = el('div', {class:'about-block'});
+    aboutBlock.appendChild(el('p', {}, [d.rebuild.about.full_text]));
+    aboutBlock.appendChild(el('p', {style:'margin:0; font-size:11px; color:var(--text-dark-soft);'}, ['Structure \u2014 Hook: "' + d.rebuild.about.hook + '" \u00b7 Story: "' + d.rebuild.about.story + '" \u00b7 Proof: "' + d.rebuild.about.proof + '" \u00b7 CTA: "' + d.rebuild.about.cta + '"']));
+    frag.appendChild(aboutBlock);
+    const kwWrap = el('div', {style:'margin-top:10px;'});
+    (d.rebuild.about.keywords || []).forEach(function(k){
+      if (k) kwWrap.appendChild(el('span', {class:'keyword-chip'}, [k]));
+    });
+    frag.appendChild(kwWrap);
+
+    // Experience bullets
+    frag.appendChild(el('h4', {style:'font-family:Special Elite,monospace; font-size:14px; margin:22px 0 10px;'}, ['Experience \u2014 bullet by bullet']));
+    (d.rebuild.experience_bullets || []).forEach(function(b){
+      const ba = el('div', {class:'before-after'});
+      ba.appendChild(el('p', {class:'ba-before'}, ['Before: ' + b.before]));
+      ba.appendChild(el('p', {class:'arrow-down'}, ['\u2193']));
+      ba.appendChild(el('p', {class:'ba-after'}, ['After: ' + b.after]));
+      frag.appendChild(ba);
+    });
+
+    // Skills
+    frag.appendChild(el('h4', {style:'font-family:Special Elite,monospace; font-size:14px; margin:22px 0 10px;'}, ['Skills']));
+    frag.appendChild(el('p', {style:'font-size:12.5px; color:var(--text-dark-soft); margin:0 0 6px;'}, ['Add (priority order):']));
+    const addWrap = el('div', {style:'margin-bottom:12px;'});
+    (d.rebuild.skills.add || []).forEach(function(s){ if (s) addWrap.appendChild(el('span', {class:'keyword-chip skill-chip add'}, [s])); });
+    frag.appendChild(addWrap);
+    frag.appendChild(el('p', {style:'font-size:12.5px; color:var(--text-dark-soft); margin:0 0 6px;'}, ['Remove:']));
+    const remWrap = el('div', {style:'margin-bottom:12px;'});
+    (d.rebuild.skills.remove || []).forEach(function(s){ if (s) remWrap.appendChild(el('span', {class:'keyword-chip skill-chip remove'}, [s])); });
+    frag.appendChild(remWrap);
+    frag.appendChild(el('p', {style:'font-size:12.5px; color:var(--text-dark-soft); margin:0 0 6px;'}, ['Pin to top 3:']));
+    const pinWrap = el('div', {});
+    (d.rebuild.skills.pin_top_3 || []).forEach(function(s){ if (s) pinWrap.appendChild(el('span', {class:'keyword-chip'}, [s])); });
+    frag.appendChild(pinWrap);
+
+    return frag;
+  }
+
+  function buildScorecardPanel(d){
+    const frag = el('div', {});
+    frag.appendChild(el('h3', {class:'section-title'}, ['Before vs After']));
+    frag.appendChild(el('p', {class:'section-desc'}, ['The full scorecard, section by section.']));
+
+    const table = el('table', {class:'score-table'});
+    const thead = el('tr', {});
+    ['Section', 'Before', 'After', 'Change'].forEach(function(h){ thead.appendChild(el('th', {}, [h])); });
+    table.appendChild(thead);
+
+    const rows = [
+      {label:'Headline', key:'headline'},
+      {label:'About (Hook)', key:'about_hook'},
+      {label:'About (Full)', key:'about_full'},
+      {label:'Experience', key:'experience'},
+      {label:'Skills / Keywords', key:'skills'}
+    ];
+    rows.forEach(function(r){
+      const before = d.before_scores[r.key], after = d.after_scores[r.key];
+      const tr = el('tr', {});
+      tr.appendChild(el('td', {}, [r.label]));
+      tr.appendChild(el('td', {}, [before + '/10']));
+      tr.appendChild(el('td', {}, [after + '/10']));
+      tr.appendChild(el('td', {class:'delta'}, ['+' + (after - before)]));
+      table.appendChild(tr);
+    });
+    const overallTr = el('tr', {class:'overall-row'});
+    overallTr.appendChild(el('td', {}, ['OVERALL']));
+    overallTr.appendChild(el('td', {}, [d.before_scores.overall + '/100']));
+    overallTr.appendChild(el('td', {}, [d.after_scores.overall + '/100']));
+    overallTr.appendChild(el('td', {class:'delta'}, ['+' + (d.after_scores.overall - d.before_scores.overall)]));
+    table.appendChild(overallTr);
+    frag.appendChild(table);
+
+    const stampsRow = el('div', {style:'display:flex; gap:20px; justify-content:center; margin-top:24px;'});
+    const s1 = el('div', {class:'score-stamp'});
+    s1.appendChild(el('span', {class:'num'}, [String(d.before_scores.overall)]));
+    s1.appendChild(el('span', {class:'of'}, ['BEFORE']));
+    const s2 = el('div', {class:'score-stamp green'});
+    s2.appendChild(el('span', {class:'num'}, [String(d.after_scores.overall)]));
+    s2.appendChild(el('span', {class:'of'}, ['AFTER']));
+    stampsRow.appendChild(s1); stampsRow.appendChild(s2);
+    frag.appendChild(stampsRow);
+
+    return frag;
+  }
+
+  function buildPlanPanel(d){
+    const frag = el('div', {});
+    frag.appendChild(el('h3', {class:'section-title'}, ['7-Day Activation Plan']));
+    frag.appendChild(el('p', {class:'section-desc'}, ['Not just profile edits \u2014 the actions that make it start working.']));
+
+    const p = d.plan;
+
+    const day1 = el('div', {class:'day-card'});
+    day1.appendChild(el('p', {class:'day-label'}, ['Day 1 \u2014 Make the profile changes']));
+    const ul1 = el('ul', {});
+    (p.day1_checklist || []).forEach(function(item){ ul1.appendChild(el('li', {}, [item])); });
+    day1.appendChild(ul1);
+    frag.appendChild(day1);
+
+    frag.appendChild(buildPostDay('Day 2 \u2014 Publish Post #1: "I just rebuilt my LinkedIn"', p.day2_post));
+
+    const day3 = el('div', {class:'day-card'});
+    day3.appendChild(el('p', {class:'day-label'}, ['Day 3 \u2014 Send 10 strategic connection requests']));
+    day3.appendChild(el('p', {style:'font-size:13.5px; margin:0 0 10px;'}, ['Who to target: ' + p.day3.targets]));
+    const dw = el('div', {class:'post-draft-wrap'});
+    const pd = el('div', {class:'post-draft'}, [p.day3.message_template]);
+    dw.appendChild(pd);
+    dw.appendChild(makeCopyButton(p.day3.message_template));
+    day3.appendChild(dw);
+    frag.appendChild(day3);
+
+    const day4 = el('div', {class:'day-card'});
+    day4.appendChild(el('p', {class:'day-label'}, ['Day 4 \u2014 Comment on 5 posts in your target space']));
+    day4.appendChild(el('p', {style:'font-size:13.5px; margin:0;'}, ['The Value Comment formula: ' + p.day4_value_comment_formula]));
+    frag.appendChild(day4);
+
+    frag.appendChild(buildPostDay('Day 5 \u2014 Publish Post #2: lessons-learned or hot take', p.day5_post));
+
+    const day6 = el('div', {class:'day-card'});
+    day6.appendChild(el('p', {class:'day-label'}, ['Day 6 \u2014 Engage + 5 more connection requests']));
+    day6.appendChild(el('p', {style:'font-size:13.5px; margin:0;'}, [p.day6]));
+    frag.appendChild(day6);
+
+    const day7 = el('div', {class:'day-card'});
+    day7.appendChild(el('p', {class:'day-label'}, ['Day 7 \u2014 Review the numbers']));
+    day7.appendChild(el('p', {style:'font-size:13.5px; margin:0;'}, [p.day7]));
+    frag.appendChild(day7);
+
+    return frag;
+  }
+
+  function buildPostDay(label, text){
+    const card = el('div', {class:'day-card'});
+    card.appendChild(el('p', {class:'day-label'}, [label]));
+    const wrap = el('div', {class:'post-draft-wrap'});
+    wrap.appendChild(el('div', {class:'post-draft'}, [text]));
+    wrap.appendChild(makeCopyButton(text));
+    card.appendChild(wrap);
+    return card;
+  }
+
+  function makeCopyButton(text){
+    const btn = el('button', {class:'copy-btn', onclick: function(){
+      navigator.clipboard.writeText(text).then(function(){
+        btn.textContent = 'COPIED';
+        setTimeout(function(){ btn.textContent = 'COPY'; }, 1500);
+      });
+    }}, ['COPY']);
+    return btn;
+  }
+
+  function buildSummaryPanel(d){
+    const frag = el('div', {});
+    frag.appendChild(el('h3', {class:'section-title'}, ['What I Learned Today']));
+    frag.appendChild(el('p', {class:'section-desc'}, ['A shareable card \u2014 ready to screenshot and post.']));
+
+    const sheet = el('div', {class:'summary-sheet'});
+    sheet.appendChild(el('h4', {}, ['I let AI roast my LinkedIn profile today.']));
+
+    const baRow = el('div', {class:'before-after-big'});
+    const b1 = el('div', {class:'ba-item before'});
+    b1.appendChild(el('div', {class:'n'}, [String(d.before_scores.overall)]));
+    b1.appendChild(el('div', {class:'l'}, ['Before']));
+    const b2 = el('div', {class:'ba-item after'});
+    b2.appendChild(el('div', {class:'n'}, [String(d.after_scores.overall)]));
+    b2.appendChild(el('div', {class:'l'}, ['After']));
+    baRow.appendChild(b1); baRow.appendChild(b2);
+    sheet.appendChild(baRow);
+
+    sheet.appendChild(el('p', {style:'font-size:12px; color:var(--text-dim); margin:0 0 8px; text-transform:uppercase; letter-spacing:0.06em;'}, ['Top 3 mistakes I was making:']));
+    const ol = el('ol', {});
+    (d.summary_card.top_mistakes || []).forEach(function(m){ ol.appendChild(el('li', {}, [m])); });
+    sheet.appendChild(ol);
+
+    sheet.appendChild(el('p', {class:'biggest'}, ['The #1 thing that made the biggest difference: ' + d.summary_card.biggest_difference]));
+
+    frag.appendChild(sheet);
+
+    const summaryText = 'I let AI roast my LinkedIn profile today. Here\u2019s what changed:\n\nBefore: ' + d.before_scores.overall + '/100\nAfter: ' + d.after_scores.overall + '/100\n\nTop 3 mistakes I was making:\n1. ' + (d.summary_card.top_mistakes[0]||'') + '\n2. ' + (d.summary_card.top_mistakes[1]||'') + '\n3. ' + (d.summary_card.top_mistakes[2]||'') + '\n\nThe #1 thing that made the biggest difference: ' + d.summary_card.biggest_difference;
+
+    const copyRow = el('div', {style:'display:flex; justify-content:center; margin-top:18px;'});
+    copyRow.appendChild(el('button', {class:'btn primary small', onclick: function(){
+      navigator.clipboard.writeText(summaryText).then(function(){
+        copyRow.firstChild.textContent = 'Copied \u2014 ready to paste';
+        setTimeout(function(){ copyRow.firstChild.textContent = 'Copy summary text'; }, 1800);
+      });
+    }}, ['Copy summary text']));
+    frag.appendChild(copyRow);
+
+    return frag;
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
