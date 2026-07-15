@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decision Report — Save vs. Invest</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-main:#0f0f14;
+    --bg-card:#1a1a24;
+    --bg-card-alt:#1e1e2e;
+    --text-primary:#f0f0f5;
+    --text-secondary:#8888a0;
+    --accent-green:#34d399;
+    --accent-red:#f87171;
+    --accent-blue:#60a5fa;
+    --accent-gold:#fbbf24;
+    --accent-purple:#a78bfa;
+    --border-subtle:rgba(255,255,255,0.06);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg-main);
+    color:var(--text-primary);
+    font-family:'Inter','Segoe UI',system-ui,sans-serif;
+    padding:0 16px 40px;
+  }
+  .wrap{max-width:720px;margin:0 auto;}
+
+  header.banner{
+    padding:40px 8px 24px;
+    text-align:center;
+  }
+  header.banner h1{
+    font-size:28px;
+    font-weight:800;
+    margin:0 0 8px;
+    letter-spacing:0.5px;
+  }
+  header.banner .subtitle{
+    font-size:16px;
+    color:var(--text-secondary);
+    margin:0 0 4px;
+  }
+  header.banner .date{
+    font-size:12px;
+    color:var(--text-secondary);
+  }
+  .gradient-rule{
+    height:2px;
+    width:100%;
+    margin-top:20px;
+    background:linear-gradient(90deg,var(--accent-blue),var(--accent-purple),var(--accent-gold));
+    border-radius:2px;
+  }
+
+  .card{
+    background:var(--bg-card);
+    border:1px solid var(--border-subtle);
+    border-radius:16px;
+    padding:28px;
+    margin-top:28px;
+    box-shadow:0 4px 24px rgba(0,0,0,0.3);
+    border-left:4px solid var(--accent-blue);
+    transition:transform 0.2s ease;
+  }
+  .card:hover{ transform:translateY(-2px); }
+
+  .section-title{
+    font-size:20px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    margin:0 0 16px;
+  }
+  .body-text{ font-size:15px; line-height:1.7; color:var(--text-primary); margin:0 0 10px;}
+  .label{ font-size:12px; font-weight:500; text-transform:uppercase; color:var(--text-secondary); letter-spacing:0.5px;}
+
+  /* Section accents */
+  #s1{ border-left-color:var(--accent-blue); }
+  #s1 .section-title{ color:var(--accent-blue); }
+
+  #s2{ border-left-color:var(--accent-green); }
+  #s2 .section-title{ color:var(--accent-green); }
+
+  #s3{ border-left-color:var(--accent-purple); }
+  #s3 .section-title{ color:var(--accent-purple); }
+
+  #s4{ border-left-color:var(--accent-blue); }
+  #s4 .section-title{ color:var(--accent-blue); }
+
+  #s5{ border-left-color:var(--accent-red); }
+  #s5 .section-title{ color:var(--accent-red); }
+
+  #s6{ border-left-color:var(--accent-green); }
+  #s6 .section-title{ color:var(--accent-green); }
+
+  #s7{ border-left-color:var(--accent-gold); background:var(--bg-card-alt); padding:34px 28px; box-shadow:0 0 20px rgba(251,191,36,0.15);}
+  #s7 .section-title{ color:var(--accent-gold); }
+
+  #s8{ border-left-color:var(--accent-gold); }
+  #s8 .section-title{ color:var(--accent-gold); }
+
+  /* Option cards in Section 2 */
+  .option-card{
+    background:var(--bg-card-alt);
+    border-radius:12px;
+    padding:20px;
+    margin-bottom:16px;
+    border:1px solid var(--border-subtle);
+  }
+  .option-card:last-child{ margin-bottom:0; }
+  .option-card h3{
+    margin:0 0 12px;
+    font-size:17px;
+    font-weight:700;
+  }
+  .opt-row{ margin-bottom:8px; }
+  .opt-row .tag{
+    font-size:11px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    display:inline-block;
+    margin-bottom:4px;
+  }
+  .tag.strength{ color:var(--accent-green); }
+  .tag.hidden{ color:var(--accent-blue); }
+  .tag.weakness{ color:var(--accent-red); }
+  .tag.bestif{ color:var(--accent-gold); }
+
+  /* Assumption buster */
+  ul.clean{ margin:0; padding-left:18px; }
+  ul.clean li{ margin-bottom:8px; line-height:1.6; }
+  .bias-pill{
+    display:inline-block;
+    background:rgba(167,139,250,0.12);
+    color:var(--accent-purple);
+    font-size:12px;
+    font-weight:600;
+    padding:3px 10px;
+    border-radius:20px;
+    margin-right:6px;
+  }
+
+  /* Matrix */
+  .matrix-row{
+    display:flex;
+    align-items:center;
+    margin-bottom:14px;
+  }
+  .matrix-label{
+    width:40%;
+    font-size:13px;
+    color:var(--text-secondary);
+    padding-right:12px;
+  }
+  .matrix-bars{ width:60%; display:flex; flex-direction:column; gap:6px; }
+  .bar-track{
+    height:28px;
+    background:rgba(255,255,255,0.05);
+    border-radius:8px;
+    overflow:hidden;
+    position:relative;
+  }
+  .bar-fill{
+    height:100%;
+    border-radius:8px;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    padding-right:8px;
+    color:#fff;
+    font-weight:700;
+    font-size:12px;
+    width:0%;
+    animation:growBar 0.8s ease-out forwards;
+  }
+  .bar-fill.save{ background:linear-gradient(90deg,#60a5fa,#3b82f6); }
+  .bar-fill.invest{ background:linear-gradient(90deg,#34d399,#10b981); }
+  @keyframes growBar{ from{ width:0%; } to{ width:var(--target); } }
+
+  .matrix-legend{
+    display:flex;
+    gap:20px;
+    margin-bottom:20px;
+    font-size:12px;
+    color:var(--text-secondary);
+  }
+  .legend-dot{ display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; }
+  .dot-save{ background:#60a5fa; }
+  .dot-invest{ background:#34d399; }
+
+  .total-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:20px;
+    padding:14px 16px;
+    background:rgba(251,191,36,0.08);
+    border-radius:10px;
+    font-weight:700;
+    font-size:15px;
+  }
+  .total-row .win{ color:var(--accent-gold); }
+
+  /* Premortem */
+  .premortem-block{ margin-bottom:20px; }
+  .premortem-block:last-child{ margin-bottom:0; }
+  .premortem-block h4{
+    margin:0 0 8px;
+    font-size:14px;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    color:var(--text-primary);
+  }
+
+  /* 7-day plan */
+  .day-row{
+    display:flex;
+    gap:12px;
+    padding:10px 0;
+    border-bottom:1px solid var(--border-subtle);
+    font-size:14px;
+    line-height:1.6;
+  }
+  .day-row:last-child{ border-bottom:none; }
+  .day-label{
+    min-width:78px;
+    font-weight:700;
+    color:var(--accent-green);
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    padding-top:2px;
+  }
+
+  /* Verdict */
+  .verdict-name{
+    font-size:30px;
+    font-weight:800;
+    color:var(--accent-gold);
+    margin:0 0 10px;
+  }
+  .hard-truth{
+    font-style:italic;
+    color:var(--text-secondary);
+    margin-top:16px;
+    font-size:14px;
+    border-top:1px solid var(--border-subtle);
+    padding-top:16px;
+  }
+
+  /* Shareable cards */
+  .share-row{
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .mini-card{
+    background:var(--bg-card-alt);
+    border-radius:12px;
+    padding:16px;
+    flex:1 1 200px;
+    min-width:200px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    border:1px solid var(--border-subtle);
+  }
+  .mini-card h4{
+    margin:0 0 10px;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    color:var(--text-secondary);
+  }
+  .mini-score-row{ display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px; }
+  .mini-score-row b{ color:var(--accent-gold); }
+  .mini-verdict{ font-size:16px; font-weight:800; color:var(--accent-gold); margin-bottom:6px; }
+  .mini-reason{ font-size:12px; color:var(--text-secondary); line-height:1.5; }
+  .mini-hook{ font-size:13px; font-weight:700; margin-bottom:8px; }
+  .mini-caption{ font-size:12px; color:var(--text-secondary); line-height:1.5; margin-bottom:8px; }
+  .mini-cta{ font-size:12px; color:var(--accent-blue); font-weight:600; }
+  .watermark{
+    font-size:10px;
+    color:var(--text-secondary);
+    opacity:0.6;
+    margin-top:12px;
+    text-align:right;
+  }
+
+  footer{
+    text-align:center;
+    color:var(--text-secondary);
+    font-size:12px;
+    margin-top:40px;
+  }
+
+  @media (max-width:600px){
+    .card{ padding:20px; border-radius:14px; }
+    header.banner h1{ font-size:24px; }
+    .matrix-row{ flex-direction:column; align-items:flex-start; }
+    .matrix-label{ width:100%; margin-bottom:6px; }
+    .matrix-bars{ width:100%; }
+    .share-row{ flex-direction:column; }
+    .body-text{ font-size:14px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="banner">
+    <h1>DECISION REPORT</h1>
+    <div class="subtitle">Save vs. Invest — building long-term wealth as a student with no income</div>
+    <div class="date">July 15, 2026</div>
+    <div class="gradient-rule"></div>
+  </header>
+
+  <!-- SECTION 1 -->
+  <section class="card" id="s1">
+    <div class="section-title">The Real Decision</div>
+    <p class="body-text">You're choosing between saving your allowance or starting to invest it, with the goal of building long-term wealth. The real trade-off: safety and liquidity for emergencies/education vs. giving your limited money time in the market to grow. It's hard because you have no income to replace a loss — every rupee you might lose feels outsized, even though your gut already knows investing.</p>
+  </section>
+
+  <!-- SECTION 2 -->
+  <section class="card" id="s2">
+    <div class="section-title">The Case For Each Option</div>
+
+    <div class="option-card">
+      <h3>Option A — Save</h3>
+      <div class="opt-row"><span class="tag strength">Strongest case</span><br>Your capital stays fully intact and available whenever an emergency or education expense hits — zero risk of loss, full liquidity.</div>
+      <div class="opt-row"><span class="tag hidden">Hidden upside</span><br>It removes decision pressure entirely and builds the habit of setting money aside — a skill you'll need no matter what you do later.</div>
+      <div class="opt-row"><span class="tag weakness">Biggest weakness</span><br>Cash sitting still doesn't grow — it works against your actual stated goal of building long-term wealth.</div>
+      <div class="opt-row"><span class="tag bestif">Best if you value</span> security and certainty over growth.</div>
+    </div>
+
+    <div class="option-card">
+      <h3>Option B — Invest</h3>
+      <div class="opt-row"><span class="tag strength">Strongest case</span><br>It's directly aligned with your actual goal — long-term wealth — and as a student your time horizon is genuinely long, which is the one advantage investors rarely get.</div>
+      <div class="opt-row"><span class="tag hidden">Hidden upside</span><br>Starting small now means you learn how investing actually feels — the dips, the waiting — while the stakes are still low.</div>
+      <div class="opt-row"><span class="tag weakness">Biggest weakness</span><br>A downturn at the wrong moment could shrink an already-small cushion, and you've said even a small loss would feel significant.</div>
+      <div class="opt-row"><span class="tag bestif">Best if you value</span> growth and are willing to trade short-term comfort for it.</div>
+    </div>
+  </section>
+
+  <!-- SECTION 3 -->
+  <section class="card" id="s3">
+    <div class="section-title">Assumption Buster</div>
+    <p class="label" style="margin-bottom:8px;">3 assumptions you may be making</p>
+    <ul class="clean">
+      <li>That saving is "safe" and investing is "risky" — but sitting in cash while it quietly loses value to inflation is its own kind of loss, just a slower one.</li>
+      <li>That this is all-or-nothing — save everything or invest everything — when nothing in what you've said rules out splitting your allowance between the two.</li>
+      <li>That there's a "wrong time" to invest that you could avoid if you're careful enough — timing is largely unpredictable, even for professionals.</li>
+    </ul>
+    <p class="label" style="margin:16px 0 8px;">2 biases at play</p>
+    <p style="margin:0 0 10px;"><span class="bias-pill">Loss aversion</span><span class="bias-pill">Status quo bias</span></p>
+    <p class="body-text" style="margin-bottom:0;">Losing money feels far heavier to you than the excitement of gains — even though your own stated goal is growth. And staying in savings feels like the "default safe choice" simply because it's familiar, not because you've shown it actually serves your long-term goal better.</p>
+    <p class="label" style="margin:16px 0 8px;">One thing you're definitely ignoring</p>
+    <p class="body-text" style="margin-bottom:0;">You haven't actually separated your allowance into "emergency fund" vs. "investable surplus." Until that line exists, every rupee feels equally risky to move — which is what's really stalling you, not the market.</p>
+  </section>
+
+  <!-- SECTION 4 -->
+  <section class="card" id="s4">
+    <div class="section-title">Decision Matrix</div>
+    <div class="matrix-legend">
+      <span><span class="legend-dot dot-save"></span>Save</span>
+      <span><span class="legend-dot dot-invest"></span>Invest</span>
+    </div>
+
+    <div id="matrix"></div>
+
+    <div class="total-row">
+      <span>Invest wins — <span class="win">49 / 70</span> vs. Save <span style="color:var(--text-secondary);">42 / 70</span></span>
+    </div>
+  </section>
+
+  <!-- SECTION 5 -->
+  <section class="card" id="s5">
+    <div class="section-title">Premortem</div>
+
+    <div class="premortem-block">
+      <h4 style="color:var(--accent-red);">If Invest failed after 12 months</h4>
+      <p class="body-text"><b>3 reasons it failed:</b> you put money in right before a downturn, picked something volatile without researching it first, or needed cash for an expense and had to sell at a loss.</p>
+      <p class="body-text"><b>Early warning sign:</b> checking your portfolio daily and feeling anxious about the number.</p>
+      <p class="body-text" style="margin-bottom:0;"><b>Prevention:</b> only invest money you won't need for 12+ months, and add small amounts steadily instead of one lump sum.</p>
+    </div>
+
+    <div class="premortem-block">
+      <h4 style="color:var(--accent-blue);">If Save "failed" after 12 months</h4>
+      <p class="body-text"><b>3 reasons it failed:</b> your allowance sat safe but quietly lost value to inflation, you made zero progress toward your actual long-term wealth goal, and you looked back at a full year of missed compounding.</p>
+      <p class="body-text"><b>Early warning sign:</b> feeling behind or anxious whenever you compare your savings to your long-term goal.</p>
+      <p class="body-text" style="margin-bottom:0;"><b>Prevention:</b> set a rule now — once your emergency fund hits its target, a fixed portion of future allowance goes to investing automatically.</p>
+    </div>
+  </section>
+
+  <!-- SECTION 6 -->
+  <section class="card" id="s6">
+    <div class="section-title">7-Day Test Plan</div>
+    <div class="day-row"><div class="day-label">Day 1–2</div><div>Research beginner-friendly, low-cost index funds or ETFs and check their minimum investment amounts.</div></div>
+    <div class="day-row"><div class="day-label">Day 3–4</div><div>Open or check an account and put in one small test amount — small enough that losing it wouldn't hurt.</div></div>
+    <div class="day-row"><div class="day-label">Day 5–6</div><div>Talk to a parent, guardian, or trusted adult about your plan and what your emergency fund target should be.</div></div>
+    <div class="day-row"><div class="day-label">Day 7</div><div>Decide: if your emergency fund covers 3–6 months of expenses, commit a fixed % of future allowance to investing. If not, keep saving toward that number first.</div></div>
+  </section>
+
+  <!-- SECTION 7 -->
+  <section class="card" id="s7">
+    <div class="section-title">The Verdict</div>
+    <div class="verdict-name">INVEST</div>
+    <p class="body-text">It wins because it's the only option that actually moves you toward the goal you named — long-term wealth — and your long time horizon as a student is a real advantage most investors don't get.</p>
+    <p class="body-text" style="margin-bottom:0;">What could flip it: if you don't yet have 3–6 months of expenses saved as a true emergency fund — in that case, save first, invest second.</p>
+    <p class="hard-truth">Waiting for the "safe" moment to invest isn't actually avoiding risk — it's just choosing a slower, quieter way to lose value to inflation.</p>
+  </section>
+
+  <!-- SECTION 8 -->
+  <section class="card" id="s8">
+    <div class="section-title">Shareable Cards</div>
+    <div class="share-row">
+
+      <div class="mini-card">
+        <div>
+          <h4>Matrix Summary</h4>
+          <div class="mini-score-row"><span>Save</span><b>42/70</b></div>
+          <div class="mini-score-row"><span>Invest</span><b>49/70</b></div>
+        </div>
+        <div class="watermark">Built with Claude AI</div>
+      </div>
+
+      <div class="mini-card">
+        <div>
+          <h4>Verdict</h4>
+          <div class="mini-verdict">INVEST</div>
+          <div class="mini-reason">Long time horizon + stated goal of long-term wealth outweighs short-term safety — once an emergency fund exists.</div>
+        </div>
+        <div class="watermark">Built with Claude AI</div>
+      </div>
+
+      <div class="mini-card">
+        <div>
+          <div class="mini-hook">I almost let fear of losing money stop me from building wealth.</div>
+          <div class="mini-caption">As a student with no income, every rupee felt too precious to risk. Turns out the real risk was never moving it at all.</div>
+          <div class="mini-cta">→ Build your own Decision Report with Claude</div>
+        </div>
+        <div class="watermark">Built with Claude AI</div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>Built with Claude AI | ABTalks 60-Day Challenge</footer>
+</div>
+
+<script>
+  const dims = [
+    { label: "Life/Career Upside", save: 4, invest: 8 },
+    { label: "Financial Safety", save: 9, invest: 5 },
+    { label: "Growth & Learning", save: 3, invest: 9 },
+    { label: "Stress Level (10=low)", save: 8, invest: 5 },
+    { label: "Reversibility (10=easy)", save: 10, invest: 7 },
+    { label: "Long-term Alignment", save: 3, invest: 9 },
+    { label: "Regret Risk (10=low)", save: 5, invest: 6 },
+  ];
+
+  const container = document.getElementById('matrix');
+  let delay = 0;
+  dims.forEach(d => {
+    const row = document.createElement('div');
+    row.className = 'matrix-row';
+
+    const label = document.createElement('div');
+    label.className = 'matrix-label';
+    label.textContent = d.label;
+    row.appendChild(label);
+
+    const bars = document.createElement('div');
+    bars.className = 'matrix-bars';
+
+    const saveTrack = document.createElement('div');
+    saveTrack.className = 'bar-track';
+    const saveFill = document.createElement('div');
+    saveFill.className = 'bar-fill save';
+    saveFill.style.setProperty('--target', (d.save * 10) + '%');
+    saveFill.style.animationDelay = delay + 's';
+    saveFill.textContent = d.save;
+    saveTrack.appendChild(saveFill);
+
+    const investTrack = document.createElement('div');
+    investTrack.className = 'bar-track';
+    const investFill = document.createElement('div');
+    investFill.className = 'bar-fill invest';
+    investFill.style.setProperty('--target', (d.invest * 10) + '%');
+    investFill.style.animationDelay = (delay + 0.1) + 's';
+    investFill.textContent = d.invest;
+    investTrack.appendChild(investFill);
+
+    bars.appendChild(saveTrack);
+    bars.appendChild(investTrack);
+    row.appendChild(bars);
+    container.appendChild(row);
+
+    delay += 0.1;
+  });
+</script>
+
+</body>
+</html>
