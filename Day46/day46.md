@@ -60,13 +60,7 @@ The application visualizes every stage of the autonomous workflow through an int
 
 
 
-## Round History
 
-
-![History](assets/history.png)
-
-
----
 
 ## Activity Logs
 
