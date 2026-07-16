@@ -27,7 +27,7 @@ The application visualizes every stage of the autonomous workflow through an int
 
 # 📷 Screenshots
 
-## 1. Autonomous Agent Studio Dashboard
+## Autonomous Agent Studio Dashboard
 
 
 
@@ -37,7 +37,7 @@ The application visualizes every stage of the autonomous workflow through an int
 
 ---
 
-## 2. Workflow Visualization
+##  Workflow Visualization
 
 
 
@@ -46,16 +46,9 @@ The application visualizes every stage of the autonomous workflow through an int
 
 ---
 
-## 3. Current Draft Generation
 
 
-
-![Draft](assets/current-draft.png)
-
-
----
-
-## 4. Evaluation Report
+##  Evaluation Report
 
 
 
@@ -65,15 +58,9 @@ The application visualizes every stage of the autonomous workflow through an int
 
 ---
 
-## 5. Critic & Safety Monitor
 
 
-![Monitor](assets/safety-monitor.png)
-
-
----
-
-## 6. Round History
+## Round History
 
 
 ![History](assets/history.png)
@@ -81,7 +68,7 @@ The application visualizes every stage of the autonomous workflow through an int
 
 ---
 
-## 7. Activity Logs
+## Activity Logs
 
 
 ![Logs](assets/activity-logs.png)
@@ -89,7 +76,7 @@ The application visualizes every stage of the autonomous workflow through an int
 
 ---
 
-## 8. Final Summary
+##  Final Summary
 
 
 
@@ -99,7 +86,7 @@ The application visualizes every stage of the autonomous workflow through an int
 
 ---
 
-# 📄 Generated HTML File
+#  Generated HTML File
 
 Project includes the complete browser-based application:
 
