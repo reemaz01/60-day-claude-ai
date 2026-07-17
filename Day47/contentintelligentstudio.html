@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Content Intelligence Studio</title>
+<style>
+  :root{
+    --void:#0B0D10;
+    --surface:#12151A;
+    --surface-2:#1A1E25;
+    --surface-3:#20252D;
+    --line:#262B33;
+    --line-bright:#343B46;
+    --text:#ECEEF1;
+    --text-dim:#9099A6;
+    --text-faint:#5B636F;
+    --signal:#FF4B3E;
+    --signal-dim:rgba(255,75,62,0.14);
+    --data:#3EE8E0;
+    --data-dim:rgba(62,232,224,0.14);
+    --gold:#F5B942;
+    --gold-dim:rgba(245,185,66,0.14);
+    --good:#4ADE80;
+    --good-dim:rgba(74,222,128,0.14);
+    --font-mono: 'SF Mono', 'Roboto Mono', 'Cascadia Code', ui-monospace, Menlo, Consolas, monospace;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
+    --font-disp: 'Segoe UI', -apple-system, sans-serif;
+    --radius: 10px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{color-scheme:dark;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(255,75,62,0.06), transparent 60%),
+      radial-gradient(1000px 500px at -10% 20%, rgba(62,232,224,0.05), transparent 60%),
+      var(--void);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.5;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--signal); color:#fff;}
+  ::-webkit-scrollbar{width:10px; height:10px;}
+  ::-webkit-scrollbar-track{background:var(--surface);}
+  ::-webkit-scrollbar-thumb{background:var(--line-bright); border-radius:6px;}
+  a{color:inherit;}
+  button{font-family:inherit; cursor:pointer;}
+  :focus-visible{outline:2px solid var(--data); outline-offset:2px;}
+
+  .rec-dot{
+    width:8px; height:8px; border-radius:50%; background:var(--signal);
+    box-shadow:0 0 8px var(--signal);
+    animation:pulse 1.6s ease-in-out infinite;
+    flex-shrink:0;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:1;}
+    50%{opacity:.35;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001s !important; transition-duration:.001s !important;}
+  }
+
+  /* ===== Header ===== */
+  header.top{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px;
+    background:rgba(11,13,16,0.85);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand .mark{
+    font-family:var(--font-mono); font-weight:700; font-size:13px;
+    letter-spacing:.14em; color:var(--text-dim);
+  }
+  .brand h1{
+    font-size:16px; font-weight:800; letter-spacing:-0.01em;
+  }
+  .model-badge{
+    font-family:var(--font-mono); font-size:11px; color:var(--text-faint);
+    border:1px solid var(--line); border-radius:100px; padding:5px 12px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .model-badge b{color:var(--data); font-weight:600;}
+
+  main{max-width:1320px; margin:0 auto; padding:32px 28px 100px;}
+
+  .eyebrow{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.16em;
+    color:var(--text-faint); text-transform:uppercase; display:flex; align-items:center; gap:10px; margin-bottom:10px;
+  }
+  .eyebrow .num{color:var(--signal); font-weight:700;}
+  .eyebrow::after{content:''; flex:1; height:1px; background:var(--line);}
+
+  h2.section-title{font-size:22px; font-weight:800; letter-spacing:-0.01em; margin-bottom:4px;}
+  .section-sub{color:var(--text-dim); font-size:13.5px; margin-bottom:20px; max-width:640px;}
+
+  /* ===== Intake ===== */
+  .intake-grid{display:grid; grid-template-columns:1.15fr 1fr; gap:22px; align-items:start;}
+  @media(max-width:980px){.intake-grid{grid-template-columns:1fr;}}
+
+  .monitor{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:18px;
+    position:relative;
+  }
+  .monitor-chrome{
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:var(--font-mono); font-size:11px; color:var(--text-faint);
+    margin-bottom:12px; letter-spacing:.05em;
+  }
+  .monitor-chrome .status-live{display:flex; align-items:center; gap:6px; color:var(--signal);}
+  .timecode{font-family:var(--font-mono); font-variant-numeric:tabular-nums;}
+
+  .frame{
+    position:relative;
+    border-radius:10px;
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 8px),
+      var(--surface-2);
+    border:1px solid var(--line);
+    aspect-ratio:16/9;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+  }
+  .frame .corner{
+    position:absolute; width:22px; height:22px; border-color:var(--text-faint); opacity:.55;
+  }
+  .frame .corner.tl{top:8px; left:8px; border-top:2px solid; border-left:2px solid;}
+  .frame .corner.tr{top:8px; right:8px; border-top:2px solid; border-right:2px solid;}
+  .frame .corner.bl{bottom:8px; left:8px; border-bottom:2px solid; border-left:2px solid;}
+  .frame .corner.br{bottom:8px; right:8px; border-bottom:2px solid; border-right:2px solid;}
+
+  .frame img{width:100%; height:100%; object-fit:cover; display:block;}
+  .frame .empty-state{
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    color:var(--text-faint); font-size:13px; text-align:center; padding:20px; z-index:2;
+  }
+  .frame .empty-state .glyph{
+    width:44px; height:44px; border-radius:50%; border:1.5px dashed var(--line-bright);
+    display:flex; align-items:center; justify-content:center; font-size:18px; color:var(--text-dim);
+  }
+  .frame.dragover{border-color:var(--data); box-shadow:inset 0 0 0 1px var(--data);}
+
+  .scanline{
+    position:absolute; left:0; right:0; height:2px;
+    background:linear-gradient(90deg, transparent, var(--data), transparent);
+    box-shadow:0 0 12px 2px var(--data);
+    top:0; opacity:0; pointer-events:none;
+  }
+  .scanline.active{animation:scan 2.2s linear infinite; opacity:1;}
+  @keyframes scan{
+    0%{top:0%;}
+    100%{top:100%;}
+  }
+
+  .drop-label{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  input[type=file]{display:none;}
+
+  .upload-actions{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;}
+  .btn{
+    font-size:12.5px; font-weight:600; padding:8px 14px; border-radius:8px;
+    border:1px solid var(--line-bright); background:var(--surface-3); color:var(--text);
+    transition:all .15s ease; display:inline-flex; align-items:center; gap:6px;
+  }
+  .btn:hover{border-color:var(--data); color:var(--data);}
+  .btn.ghost{background:transparent;}
+  .btn.danger:hover{border-color:var(--signal); color:var(--signal);}
+
+  .competitor-strip{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;}
+  .competitor-thumb{
+    width:74px; height:42px; border-radius:6px; overflow:hidden; border:1px solid var(--line);
+    position:relative; flex-shrink:0;
+  }
+  .competitor-thumb img{width:100%; height:100%; object-fit:cover;}
+  .competitor-thumb .rm{
+    position:absolute; top:1px; right:1px; background:rgba(0,0,0,.6); color:#fff; border:none;
+    width:16px; height:16px; font-size:10px; border-radius:50%; line-height:1;
+  }
+  .add-competitor{
+    width:74px; height:42px; border-radius:6px; border:1px dashed var(--line-bright);
+    display:flex; align-items:center; justify-content:center; color:var(--text-faint); font-size:16px;
+    flex-shrink:0; background:transparent;
+  }
+  .add-competitor:hover{color:var(--data); border-color:var(--data);}
+
+  /* ===== Panel / form ===== */
+  .panel{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px;
+  }
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block; font-family:var(--font-mono); font-size:11px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--text-faint); margin-bottom:7px;
+  }
+  .field textarea, .field input[type=text]{
+    width:100%; background:var(--surface-2); border:1px solid var(--line); border-radius:8px;
+    padding:10px 12px; color:var(--text); font-family:var(--font-body); font-size:13.5px; resize:vertical;
+    transition:border-color .15s ease;
+  }
+  .field textarea:focus, .field input[type=text]:focus{border-color:var(--data);}
+  .field .hint{font-size:11.5px; color:var(--text-faint); margin-top:5px;}
+
+  .tone-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .tone-opt{
+    border:1px solid var(--line); background:var(--surface-2); border-radius:8px; padding:10px 12px;
+    cursor:pointer; transition:all .15s ease;
+  }
+  .tone-opt.active{border-color:var(--signal); background:var(--signal-dim);}
+  .tone-opt .t-name{font-size:12.5px; font-weight:700;}
+  .tone-opt .t-desc{font-size:11px; color:var(--text-faint); margin-top:2px;}
+
+  .run-bar{display:flex; align-items:center; gap:12px; margin-top:6px;}
+  .btn-run{
+    flex:1; background:var(--signal); color:#fff; border:none; padding:13px 18px; border-radius:10px;
+    font-weight:800; font-size:14px; letter-spacing:.01em; display:flex; align-items:center; justify-content:center; gap:8px;
+    transition:filter .15s ease, transform .1s ease;
+  }
+  .btn-run:hover{filter:brightness(1.1);}
+  .btn-run:active{transform:scale(.99);}
+  .btn-run:disabled{background:var(--surface-3); color:var(--text-faint); cursor:not-allowed;}
+
+  /* ===== Console (running state) ===== */
+  .console-grid{display:grid; grid-template-columns:360px 1fr; gap:22px; align-items:start; margin-top:8px;}
+  @media(max-width:980px){.console-grid{grid-template-columns:1fr;}}
+  .sticky-col{position:sticky; top:78px; display:flex; flex-direction:column; gap:16px;}
+
+  .log-box{
+    background:#000; border:1px solid var(--line); border-radius:12px; padding:12px 14px;
+    font-family:var(--font-mono); font-size:11.5px; color:var(--good); height:190px; overflow-y:auto;
+  }
+  .log-box .ln{margin-bottom:4px; color:var(--text-dim);}
+  .log-box .ln .t{color:var(--text-faint); margin-right:8px;}
+  .log-box .ln.ok{color:var(--good);}
+  .log-box .ln.warn{color:var(--gold);}
+  .log-box .ln.err{color:var(--signal);}
+
+  .reviewer-list{display:flex; flex-direction:column; gap:8px;}
+  .reviewer-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:12px 14px;
+    display:flex; align-items:center; gap:12px;
+  }
+  .reviewer-card .ic{
+    width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+    font-size:14px; background:var(--surface-2); flex-shrink:0;
+  }
+  .reviewer-card .info{flex:1; min-width:0;}
+  .reviewer-card .info .nm{font-size:12.5px; font-weight:700;}
+  .reviewer-card .info .fc{font-size:10.5px; color:var(--text-faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .status-chip{
+    font-family:var(--font-mono); font-size:10px; padding:3px 8px; border-radius:100px; letter-spacing:.04em;
+    background:var(--surface-3); color:var(--text-faint); flex-shrink:0;
+  }
+  .status-chip.running{background:var(--data-dim); color:var(--data);}
+  .status-chip.done{background:var(--good-dim); color:var(--good);}
+  .status-chip.error{background:var(--signal-dim); color:var(--signal);}
+  .spin{
+    width:9px; height:9px; border-radius:50%; border:1.5px solid var(--data); border-top-color:transparent;
+    display:inline-block; animation:spin .7s linear infinite; margin-right:5px; vertical-align:-1px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ===== Results ===== */
+  .results-col{display:flex; flex-direction:column; gap:22px;}
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px;}
+  .card.reveal{animation:reveal .5s ease both;}
+  @keyframes reveal{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;}}
+
+  .score-hero{display:flex; gap:26px; align-items:center; flex-wrap:wrap;}
+  .gauge-wrap{position:relative; width:150px; height:150px; flex-shrink:0;}
+  .gauge-wrap svg{transform:rotate(-90deg);}
+  .gauge-num{
+    position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  }
+  .gauge-num .n{font-size:36px; font-weight:800; font-family:var(--font-mono);}
+  .gauge-num .l{font-size:10px; color:var(--text-faint); letter-spacing:.1em; text-transform:uppercase;}
+  .score-meta{flex:1; min-width:220px;}
+  .score-meta h3{font-size:16px; margin-bottom:6px;}
+  .score-meta p{color:var(--text-dim); font-size:13.5px;}
+  .verdict-tag{
+    display:inline-block; margin-top:10px; font-family:var(--font-mono); font-size:11px;
+    padding:4px 10px; border-radius:6px; letter-spacing:.05em;
+  }
+
+  .cat-bars{display:flex; flex-direction:column; gap:14px; margin-top:6px;}
+  .cat-bar-row .top{display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:5px;}
+  .cat-bar-row .top .nm{font-weight:700;}
+  .cat-bar-row .top .sc{font-family:var(--font-mono); color:var(--text-dim);}
+  .cat-track{height:7px; background:var(--surface-2); border-radius:100px; overflow:hidden;}
+  .cat-fill{height:100%; border-radius:100px; width:0%; transition:width 1.1s cubic-bezier(.2,.9,.2,1); background:linear-gradient(90deg, var(--data), var(--good));}
+
+  .two-col{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  @media(max-width:700px){.two-col{grid-template-columns:1fr;}}
+  .list-block h4{font-size:12px; text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px; display:flex; align-items:center; gap:6px;}
+  .list-block ul{list-style:none; display:flex; flex-direction:column; gap:8px;}
+  .list-block li{font-size:13px; color:var(--text-dim); padding-left:16px; position:relative; line-height:1.5;}
+  .list-block li::before{position:absolute; left:0;}
+  .list-block.strengths li::before{content:'+'; color:var(--good); font-weight:800;}
+  .list-block.weaknesses li::before{content:'\2013'; color:var(--signal); font-weight:800;}
+  .list-block.opportunities li::before{content:'\2605'; color:var(--gold); font-size:10px; top:2px;}
+  .list-block.recs li::before{content:'\2192'; color:var(--data);}
+
+  .reviewer-detail{border:1px solid var(--line); border-radius:10px; margin-bottom:10px; overflow:hidden;}
+  .reviewer-detail summary{
+    padding:12px 14px; cursor:pointer; font-size:13px; font-weight:700; list-style:none;
+    display:flex; justify-content:space-between; align-items:center; background:var(--surface-2);
+  }
+  .reviewer-detail summary::-webkit-details-marker{display:none;}
+  .reviewer-detail summary .sc{font-family:var(--font-mono); color:var(--data); font-weight:700;}
+  .reviewer-detail .body{padding:14px; font-size:13px; color:var(--text-dim);}
+  .reviewer-detail .body p{margin-bottom:10px;}
+
+  .before-after{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media(max-width:700px){.before-after{grid-template-columns:1fr;}}
+  .ba-box{border:1px solid var(--line); border-radius:10px; padding:14px; background:var(--surface-2);}
+  .ba-box .tag{font-family:var(--font-mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; margin-bottom:8px; display:inline-block; padding:2px 8px; border-radius:5px;}
+  .ba-box.before .tag{background:var(--signal-dim); color:var(--signal);}
+  .ba-box.after .tag{background:var(--good-dim); color:var(--good);}
+  .ba-box .title-txt{font-size:14.5px; font-weight:700; margin-bottom:8px;}
+  .ba-box p{font-size:12.5px; color:var(--text-dim);}
+
+  .chip-row{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{
+    background:var(--surface-2); border:1px solid var(--line); border-radius:100px; padding:7px 13px;
+    font-size:12px; color:var(--text-dim); transition:all .15s ease;
+  }
+  .chip:hover{border-color:var(--data); color:var(--data);}
+
+  .checklist{display:flex; flex-direction:column; gap:9px;}
+  .checklist label{display:flex; align-items:flex-start; gap:10px; font-size:13px; color:var(--text-dim); cursor:pointer;}
+  .checklist input{margin-top:3px; accent-color:var(--good);}
+  .checklist input:checked + span{color:var(--text); text-decoration:line-through; text-decoration-color:var(--text-faint);}
+
+  .estimate-banner{
+    display:flex; align-items:center; gap:10px; background:var(--gold-dim); border:1px solid rgba(245,185,66,.3);
+    border-radius:8px; padding:9px 13px; font-size:11.5px; color:var(--gold); margin-bottom:14px; font-family:var(--font-mono);
+  }
+
+  .deepdive-result{
+    margin-top:14px; padding:14px; border:1px solid var(--line); border-radius:10px; background:var(--surface-2);
+    font-size:13px; color:var(--text-dim); white-space:pre-wrap;
+  }
+
+  .error-box{
+    border:1px solid var(--signal); background:var(--signal-dim); border-radius:10px; padding:14px 16px;
+    font-size:13px; color:var(--signal); display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+  }
+
+  .footer-note{text-align:center; color:var(--text-faint); font-size:11.5px; margin-top:50px; font-family:var(--font-mono);}
+
+  .hidden{display:none !important;}
+  .skeleton{background:linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 37%, var(--surface-2) 63%); background-size:400% 100%; animation:sk 1.4s ease infinite; border-radius:6px;}
+  @keyframes sk{0%{background-position:100% 50%;} 100%{background-position:0 50%;}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <span class="rec-dot"></span>
+    <span class="mark">CIS</span>
+    <h1>Content Intelligence Studio</h1>
+  </div>
+  <div class="model-badge">ENGINE&nbsp;<b>claude-sonnet-4-6</b></div>
+</header>
+
+<main>
+
+  <!-- ============ STAGE 01 : INTAKE ============ -->
+  <section id="intake-section">
+    <div class="eyebrow"><span class="num">STAGE&nbsp;01</span> INTAKE</div>
+    <h2 class="section-title">Load your thumbnail for review</h2>
+    <p class="section-sub">Upload the thumbnail you want scored. Add the video title, live analytics, and competitor thumbnails for a sharper, more comparative verdict — all optional.</p>
+
+    <div class="intake-grid">
+      <div class="monitor">
+        <div class="monitor-chrome">
+          <span>MONITOR&nbsp;01 · PRIMARY THUMBNAIL</span>
+          <span class="timecode" id="timecode">00:00:00:00</span>
+        </div>
+        <div class="frame" id="drop-frame">
+          <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+          <div class="scanline" id="scanline"></div>
+          <div class="empty-state" id="frame-empty">
+            <div class="glyph">&#8593;</div>
+            <div>Drop a thumbnail image here<br>or click to browse — JPG / PNG</div>
+          </div>
+          <img id="frame-img" class="hidden" alt="Uploaded thumbnail preview">
+          <label class="drop-label" id="drop-label" for="thumb-input"></label>
+        </div>
+        <input type="file" id="thumb-input" accept="image/*">
+        <div class="upload-actions">
+          <button class="btn ghost" id="clear-thumb">Remove image</button>
+        </div>
+
+        <div class="field" style="margin-top:16px;">
+          <label>Competitor thumbnails (optional)</label>
+          <div class="competitor-strip" id="competitor-strip">
+            <button class="add-competitor" id="add-competitor" type="button" title="Add competitor thumbnail">+</button>
+          </div>
+          <input type="file" id="competitor-input" accept="image/*" multiple>
+          <div class="hint">Used to benchmark differentiation against what's already ranking in the space.</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="field">
+          <label>Video title / description</label>
+          <textarea id="title-input" rows="2" placeholder="e.g. I Tried Building a Startup in 24 Hours (No Sleep Challenge)"></textarea>
+          <div class="hint">The title Claude will read alongside the thumbnail for hook synergy.</div>
+        </div>
+        <div class="field">
+          <label>Analytics (optional)</label>
+          <textarea id="analytics-input" rows="2" placeholder="e.g. CTR 4.2% vs channel avg 6.1%, 38k impressions, avg view duration 3:12"></textarea>
+          <div class="hint">Any real performance data sharpens the CTR forecast — paste it as free text.</div>
+        </div>
+        <div class="field">
+          <label>Review intensity</label>
+          <div class="tone-grid" id="tone-grid">
+            <div class="tone-opt" data-tone="gentle"><div class="t-name">Gentle</div><div class="t-desc">Encouraging, soft suggestions</div></div>
+            <div class="tone-opt" data-tone="balanced"><div class="t-name">Balanced</div><div class="t-desc">Even mix of praise &amp; critique</div></div>
+            <div class="tone-opt" data-tone="brutal"><div class="t-name">Brutally honest</div><div class="t-desc">Top-tier strategist, no filter</div></div>
+            <div class="tone-opt active" data-tone="expert"><div class="t-name">Expert panel</div><div class="t-desc">High-stakes launch, zero slack</div></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Primary goal</label>
+          <div class="tone-grid" id="goal-grid">
+            <div class="tone-opt active" data-goal="ctr"><div class="t-name">Max CTR</div><div class="t-desc">Click-through above all</div></div>
+            <div class="tone-opt active" data-goal="brand"><div class="t-name">Brand fit</div><div class="t-desc">Consistency across uploads</div></div>
+            <div class="tone-opt active" data-goal="compete"><div class="t-name">Stand out</div><div class="t-desc">Beat competing thumbnails</div></div>
+            <div class="tone-opt active" data-goal="launch"><div class="t-name">Launch test</div><div class="t-desc">Pre-publish confidence check</div></div>
+          </div>
+        </div>
+        <div class="run-bar">
+          <button class="btn-run" id="run-btn" disabled>Run deep analysis</button>
+        </div>
+        <div class="hint" id="run-hint" style="margin-top:10px;">Add a thumbnail image to enable analysis.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STAGE 02+03 : CONSOLE / LIVE REVIEW ============ -->
+  <section id="console-section" class="hidden" style="margin-top:46px;">
+    <div class="eyebrow"><span class="num">STAGE&nbsp;02</span> SPECIALIST REVIEW</div>
+    <h2 class="section-title">Reviewer panel in session</h2>
+    <p class="section-sub">Each specialist independently inspects the upload, then a synthesis director reconciles their findings into one verdict.</p>
+
+    <div class="console-grid">
+      <div class="sticky-col">
+        <div class="log-box" id="log-box"></div>
+        <div class="reviewer-list" id="reviewer-list"></div>
+      </div>
+      <div class="results-col" id="results-col"></div>
+    </div>
+  </section>
+
+  <div id="error-slot" style="margin-top:22px;"></div>
+
+  <div class="footer-note">Content Intelligence Studio · every score and note above is generated live by Claude — nothing here is hardcoded or templated.</div>
+</main>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------------------------------------------------------
+   * STATE
+   * ------------------------------------------------------------- */
+  const state = {
+    thumb: null,          // {base64, mediaType, name}
+    competitors: [],      // [{base64, mediaType, name}]
+    tone: 'expert',
+    goals: new Set(['ctr','brand','compete','launch']),
+    reviewers: [],         // built at run time
+    results: {},           // id -> parsed
+    running: false
+  };
+
+  const TONE_TEXT = {
+    gentle: "Tone: be warm and encouraging. Lead every point with genuine credit where it's earned, and phrase improvement points as gentle, supportive suggestions rather than harsh criticism. Still be honest — do not invent praise that isn't warranted — but soften delivery.",
+    balanced: "Tone: be balanced and even-handed. Give strengths and weaknesses roughly equal weight and describe both plainly, like a fair, professional editor.",
+    brutal: "Tone: be brutally honest, like a top-tier YouTube growth strategist reviewing a client's work under a deadline. Do not soften weak choices — name them plainly and specifically. Stay professional, never insulting, but do not sugarcoat mediocrity.",
+    expert: "Tone: expert-panel intensity. Assume this thumbnail is going out on a high-stakes launch with real budget behind it and there is zero tolerance for avoidable mistakes. Be rigorous, exacting, and specific — but always ground criticism in concrete visual/strategic reasoning, and give real credit to anything that is genuinely strong."
+  };
+
+  const OUTPUT_FORMAT = [
+    "Respond ONLY in plain text using exactly this structure — no JSON, no markdown headers, no asterisks, no code fences, no backticks:",
+    "SCORE: <a single integer from 0 to 100>",
+    "SUMMARY: <2-3 sentence summary of your verdict, in prose>",
+    "STRENGTHS:",
+    "- <point>",
+    "- <point>",
+    "WEAKNESSES:",
+    "- <point>",
+    "- <point>",
+    "OPPORTUNITIES:",
+    "- <a missed opportunity, point>",
+    "RECOMMENDATIONS:",
+    "- <a specific, actionable recommendation>",
+    "- <a specific, actionable recommendation>",
+    "Keep each bullet to one line of plain prose. Use the exact section labels shown (SCORE, SUMMARY, STRENGTHS, WEAKNESSES, OPPORTUNITIES, RECOMMENDATIONS) each on its own line followed by a colon, with nothing else on that label line."
+  ].join("\n");
+
+  /* ---------------------------------------------------------------
+   * REVIEWER DEFINITIONS (chosen dynamically at run time)
+   * ------------------------------------------------------------- */
+  function buildReviewerRoster(){
+    const roster = [];
+
+    roster.push({
+      id:'hook', name:'Hook & Curiosity Strategist', icon:'&#128064;',
+      focus:'Curiosity gap, emotional pull, thumbnail-title synergy',
+      system: [
+        "You are a Hook & Curiosity Strategist inside an elite YouTube content consultancy.",
+        "You specialize in the psychology of the click: curiosity gaps, pattern interrupts, emotional triggers, and how a thumbnail's promise pairs with the video title to make skipping it feel costly.",
+        "You are looking at a real thumbnail image (and possibly its title). Analyze what's ACTUALLY visible in the image — do not assume content you cannot see.",
+        "Judge: does the thumbnail create an open curiosity loop? Does it pair with the title to promise something specific? Is there a clear emotional hook (surprise, stakes, tension, aspiration)? Would this stop a thumb mid-scroll on a mobile feed next to five other videos?",
+        TONE_TEXT[state.tone],
+        OUTPUT_FORMAT
+      ].join("\n\n")
+    });
+
+    roster.push({
+      id:'visual', name:'Visual Composition Analyst', icon:'&#127912;',
+      focus:'Composition, legibility, contrast, clutter, mobile readability',
+      system:[
+        "You are a Visual Composition Analyst inside an elite YouTube content consultancy, trained in design, color theory, and attention mechanics for small-screen thumbnails.",
+        "You are looking at a real thumbnail image. Analyze what's ACTUALLY visible: layout, focal point, rule-of-thirds usage, facial expression and gaze direction if a face is present, text legibility at small size, color contrast against typical YouTube UI (white/dark surrounding), clutter, and whether the image would still read clearly at 120px wide on a phone.",
+        "Be specific about what you literally see — colors, shapes, text placement, faces, objects — before judging it.",
+        TONE_TEXT[state.tone],
+        OUTPUT_FORMAT
+      ].join("\n\n")
+    });
+
+    roster.push({
+      id:'brand', name:'Brand Consistency Auditor', icon:'&#127991;',
+      focus:'Style, palette and typography consistency signals',
+      system:[
+        "You are a Brand Consistency Auditor inside an elite YouTube content consultancy, specializing in channel-level visual identity: recurring color palettes, typography systems, framing style, and recognizability at a glance in a subscription feed.",
+        "You are looking at a real thumbnail image, and possibly competitor thumbnails and a title/description for context. Judge whether this thumbnail looks like it belongs to a deliberate, recognizable channel identity, or whether it looks like a one-off with no consistent system.",
+        "If competitor thumbnails are provided, use them only as a general market-style reference, not as the creator's own brand history — note that a true brand audit ideally uses this creator's past thumbnails, and reason as best you can from what's given.",
+        TONE_TEXT[state.tone],
+        OUTPUT_FORMAT
+      ].join("\n\n")
+    });
+
+    roster.push({
+      id:'ctr', name:'CTR Performance Forecaster', icon:'&#128200;',
+      focus:'Predicted click-through potential, grounded in any analytics given',
+      system:[
+        "You are a CTR Performance Forecaster inside an elite YouTube content consultancy, specializing in translating creative choices into directional click-through-rate expectations.",
+        "You are looking at a real thumbnail image and possibly a title and real analytics data (impressions, CTR, view duration). If analytics are provided, ground your forecast in them explicitly — reconcile what the numbers already show with what you see in the creative. If no analytics are provided, forecast based purely on established CTR-driving visual and psychological patterns, and say so plainly.",
+        "You must make clear that any performance number you give is an AI estimate, not a guarantee, and should be phrased as directional (e.g. 'likely in the upper range for this niche' rather than a false-precision statistic) unless real analytics were supplied.",
+        TONE_TEXT[state.tone],
+        OUTPUT_FORMAT
+      ].join("\n\n")
+    });
+
+    if(state.competitors.length){
+      roster.push({
+        id:'competitive', name:'Competitive Positioning Analyst', icon:'&#9876;',
+        focus:'Differentiation vs uploaded competitor thumbnails',
+        system:[
+          "You are a Competitive Positioning Analyst inside an elite YouTube content consultancy, specializing in shelf differentiation — how a thumbnail stands out when placed edge-to-edge against real competing videos in a search or suggested-videos grid.",
+          "You are looking at the creator's real thumbnail image plus one or more real competitor thumbnail images. Compare them directly: palette overlap, composition similarity, redundant visual cliches (e.g. same shocked-face-and-red-arrow formula), and where the creator's thumbnail either blends in or breaks the pattern in a way that helps or hurts it.",
+          TONE_TEXT[state.tone],
+          OUTPUT_FORMAT
+        ].join("\n\n")
+      });
+    }
+
+    return roster;
+  }
+
+  /* ---------------------------------------------------------------
+   * UTILITIES
+   * ------------------------------------------------------------- */
+  function fileToBase64(file){
+    return new Promise((resolve, reject)=>{
+      const reader = new FileReader();
+      reader.onload = ()=> resolve(reader.result.split(",")[1]);
+      reader.onerror = ()=> reject(new Error("Could not read file"));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function escapeHtml(str){
+    return (str||"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  function nowClock(){
+    const d = new Date();
+    return [d.getHours(),d.getMinutes(),d.getSeconds()].map(n=>String(n).padStart(2,"0")).join(":") + ":" + String(d.getMilliseconds()).padStart(3,"0").slice(0,2);
+  }
+
+  let logBox;
+  function log(msg, type){
+    if(!logBox) logBox = document.getElementById('log-box');
+    const line = document.createElement('div');
+    line.className = 'ln' + (type ? ' '+type : '');
+    line.innerHTML = '<span class="t">'+nowClock()+'</span>' + escapeHtml(msg);
+    logBox.appendChild(line);
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+
+  /* ---------------------------------------------------------------
+   * CLAUDE API CALL (with retry)
+   * ------------------------------------------------------------- */
+  async function callClaude(system, userContent, opts){
+    opts = opts || {};
+    const maxTokens = opts.maxTokens || 1400;
+    const maxAttempts = 3;
+    let lastErr = null;
+
+    for(let attempt=1; attempt<=maxAttempts; attempt++){
+      try{
+        const resp = await fetch("https://api.anthropic.com/v1/messages", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({
+            model:"claude-sonnet-4-6",
+            max_tokens: maxTokens,
+            system: system,
+            messages:[{ role:"user", content:userContent }]
+          })
+        });
+
+        if(!resp.ok){
+          const errText = await resp.text().catch(()=> "");
+          throw new Error("API error " + resp.status + (errText ? (": " + errText.slice(0,180)) : ""));
+        }
+
+        const data = await resp.json();
+        const text = (data.content || [])
+          .filter(b => b && b.type === "text")
+          .map(b => b.text)
+          .join("\n")
+          .trim();
+
+        if(!text) throw new Error("Empty response from model");
+        return text;
+
+      }catch(err){
+        lastErr = err;
+        if(attempt < maxAttempts){
+          await new Promise(r=>setTimeout(r, 600*attempt));
+          continue;
+        }
+      }
+    }
+    throw lastErr || new Error("Unknown API failure");
+  }
+
+  /* ---------------------------------------------------------------
+   * PLAIN-TEXT SECTION PARSER (no JSON anywhere)
+   * ------------------------------------------------------------- */
+  const SECTION_KEYS = ["SCORE","SUMMARY","STRENGTHS","WEAKNESSES","OPPORTUNITIES","RECOMMENDATIONS"];
+  const LIST_KEYS = ["STRENGTHS","WEAKNESSES","OPPORTUNITIES","RECOMMENDATIONS"];
+
+  function parseSections(raw, keys, listKeys){
+    keys = keys || SECTION_KEYS;
+    listKeys = listKeys || LIST_KEYS;
+    const result = {};
+    keys.forEach(k => result[k] = listKeys.includes(k) ? [] : "");
+
+    const lines = raw.split("\n");
+    let current = null;
+    const keyPattern = new RegExp("^\\s*(" + keys.join("|") + ")\\s*:\\s*(.*)$");
+
+    for(let rawLine of lines){
+      const line = rawLine.replace(/\r$/,"");
+      const m = line.match(keyPattern);
+      if(m){
+        current = m[1];
+        const rest = m[2].trim();
+        if(rest){
+          if(listKeys.includes(current)){
+            result[current].push(rest.replace(/^[-*]\s*/,""));
+          } else {
+            result[current] = rest;
+          }
+        }
+        continue;
+      }
+      if(current){
+        const trimmed = line.trim();
+        if(!trimmed) continue;
+        if(listKeys.includes(current)){
+          result[current].push(trimmed.replace(/^[-*]\s*/,""));
+        } else {
+          result[current] = (result[current] ? result[current] + " " : "") + trimmed;
+        }
+      }
+    }
+
+    if(typeof result.SCORE === "string"){
+      const numMatch = result.SCORE.match(/\d+/);
+      result.SCORE = numMatch ? Math.max(0, Math.min(100, parseInt(numMatch[0],10))) : null;
+    }
+    return result;
+  }
+
+  const FINAL_KEYS = [
+    "OVERALL_SCORE","VERDICT","EXEC_SUMMARY","HEALTH_REPORT","TOP_IMPROVEMENTS",
+    "PREDICTED_PERFORMANCE","BEFORE_TITLE","AFTER_TITLE","BEFORE_ASSESSMENT","AFTER_ASSESSMENT",
+    "ALT_HOOKS","ALT_TITLES","CHECKLIST","DEEPER_PROMPTS"
+  ];
+  const FINAL_LIST_KEYS = ["TOP_IMPROVEMENTS","ALT_HOOKS","ALT_TITLES","CHECKLIST","DEEPER_PROMPTS"];
+
+  /* ---------------------------------------------------------------
+   * UI: image intake
+   * ------------------------------------------------------------- */
+  const dropFrame = document.getElementById('drop-frame');
+  const frameImg = document.getElementById('frame-img');
+  const frameEmpty = document.getElementById('frame-empty');
+  const thumbInput = document.getElementById('thumb-input');
+  const scanline = document.getElementById('scanline');
+  const runBtn = document.getElementById('run-btn');
+  const runHint = document.getElementById('run-hint');
+
+  function refreshRunEnabled(){
+    const ok = !!state.thumb && !state.running;
+    runBtn.disabled = !ok;
+    runHint.textContent = state.thumb ? "Ready — Claude will analyze the image directly." : "Add a thumbnail image to enable analysis.";
+  }
+
+  async function handleThumbFile(file){
+    if(!file || !file.type.startsWith("image/")){
+      log("Rejected file — not a supported image type.", "err");
+      return;
+    }
+    try{
+      const base64 = await fileToBase64(file);
+      state.thumb = { base64, mediaType:file.type, name:file.name };
+      frameImg.src = "data:"+file.type+";base64,"+base64;
+      frameImg.classList.remove('hidden');
+      frameEmpty.classList.add('hidden');
+      refreshRunEnabled();
+    }catch(e){
+      log("Failed to read image: " + e.message, "err");
+    }
+  }
+
+  document.getElementById('drop-label').addEventListener('click', (e)=>{ e.preventDefault(); thumbInput.click(); });
+  thumbInput.addEventListener('change', (e)=>{ if(e.target.files[0]) handleThumbFile(e.target.files[0]); });
+
+  ['dragover','dragenter'].forEach(evt=>{
+    dropFrame.addEventListener(evt, e=>{ e.preventDefault(); dropFrame.classList.add('dragover'); });
+  });
+  ['dragleave','drop'].forEach(evt=>{
+    dropFrame.addEventListener(evt, e=>{ e.preventDefault(); dropFrame.classList.remove('dragover'); });
+  });
+  dropFrame.addEventListener('drop', e=>{
+    const f = e.dataTransfer.files[0];
+    if(f) handleThumbFile(f);
+  });
+
+  document.getElementById('clear-thumb').addEventListener('click', ()=>{
+    state.thumb = null;
+    frameImg.classList.add('hidden');
+    frameImg.src = "";
+    frameEmpty.classList.remove('hidden');
+    thumbInput.value = "";
+    refreshRunEnabled();
+  });
+
+  /* competitor thumbnails */
+  const competitorStrip = document.getElementById('competitor-strip');
+  const competitorInput = document.getElementById('competitor-input');
+  document.getElementById('add-competitor').addEventListener('click', ()=> competitorInput.click());
+  competitorInput.addEventListener('change', async (e)=>{
+    const files = Array.from(e.target.files || []);
+    for(const file of files){
+      if(!file.type.startsWith('image/')) continue;
+      try{
+        const base64 = await fileToBase64(file);
+        const entry = { base64, mediaType:file.type, name:file.name };
+        state.competitors.push(entry);
+        renderCompetitorStrip();
+      }catch(err){ log('Could not read competitor image: '+err.message,'err'); }
+    }
+    competitorInput.value = "";
+  });
+  function renderCompetitorStrip(){
+    const addBtn = document.getElementById('add-competitor');
+    competitorStrip.querySelectorAll('.competitor-thumb').forEach(n=>n.remove());
+    state.competitors.forEach((c, idx)=>{
+      const div = document.createElement('div');
+      div.className = 'competitor-thumb';
+      div.innerHTML = '<img src="data:'+c.mediaType+';base64,'+c.base64+'" alt="Competitor thumbnail '+(idx+1)+'"><button class="rm" data-idx="'+idx+'" title="Remove">&times;</button>';
+      competitorStrip.insertBefore(div, addBtn);
+    });
+    competitorStrip.querySelectorAll('.rm').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        state.competitors.splice(parseInt(btn.dataset.idx,10),1);
+        renderCompetitorStrip();
+      });
+    });
+  }
+
+  /* tone + goal selectors */
+  document.getElementById('tone-grid').addEventListener('click', (e)=>{
+    const opt = e.target.closest('.tone-opt');
+    if(!opt) return;
+    document.querySelectorAll('#tone-grid .tone-opt').forEach(o=>o.classList.remove('active'));
+    opt.classList.add('active');
+    state.tone = opt.dataset.tone;
+  });
+  document.getElementById('goal-grid').addEventListener('click', (e)=>{
+    const opt = e.target.closest('.tone-opt');
+    if(!opt) return;
+    opt.classList.toggle('active');
+    if(opt.classList.contains('active')) state.goals.add(opt.dataset.goal);
+    else state.goals.delete(opt.dataset.goal);
+  });
+
+  /* timecode ticker */
+  let tcSeconds = 0;
+  setInterval(()=>{
+    if(!state.running) return;
+    tcSeconds += 1;
+    const h = String(Math.floor(tcSeconds/3600)).padStart(2,'0');
+    const m = String(Math.floor((tcSeconds%3600)/60)).padStart(2,'0');
+    const s = String(tcSeconds%60).padStart(2,'0');
+    document.getElementById('timecode').textContent = h+":"+m+":"+s+":00";
+  }, 1000);
+
+  /* ---------------------------------------------------------------
+   * REVIEWER LIST UI
+   * ------------------------------------------------------------- */
+  function renderReviewerList(){
+    const list = document.getElementById('reviewer-list');
+    list.innerHTML = "";
+    state.reviewers.forEach(rv=>{
+      const card = document.createElement('div');
+      card.className = 'reviewer-card';
+      card.id = 'rv-card-'+rv.id;
+      card.innerHTML =
+        '<div class="ic">'+rv.icon+'</div>'+
+        '<div class="info"><div class="nm">'+escapeHtml(rv.name)+'</div><div class="fc">'+escapeHtml(rv.focus)+'</div></div>'+
+        '<div class="status-chip" id="rv-status-'+rv.id+'">QUEUED</div>';
+      list.appendChild(card);
+    });
+    const synthCard = document.createElement('div');
+    synthCard.className = 'reviewer-card';
+    synthCard.id = 'rv-card-synthesis';
+    synthCard.innerHTML =
+      '<div class="ic">&#129504;</div>'+
+      '<div class="info"><div class="nm">Synthesis Director</div><div class="fc">Reconciles all findings into final verdict</div></div>'+
+      '<div class="status-chip" id="rv-status-synthesis">QUEUED</div>';
+    list.appendChild(synthCard);
+  }
+
+  function setStatus(id, status){
+    const chip = document.getElementById('rv-status-'+id);
+    if(!chip) return;
+    chip.className = 'status-chip ' + status;
+    if(status === 'running') chip.innerHTML = '<span class="spin"></span>RUNNING';
+    else if(status === 'done') chip.textContent = 'DONE';
+    else if(status === 'error') chip.textContent = 'ERROR';
+    else chip.textContent = 'QUEUED';
+  }
+
+  /* ---------------------------------------------------------------
+   * BUILD USER MESSAGE CONTENT (image + text blocks)
+   * ------------------------------------------------------------- */
+  function buildContext(){
+    const title = document.getElementById('title-input').value.trim();
+    const analytics = document.getElementById('analytics-input').value.trim();
+    const goalLabels = { ctr:'Maximize click-through rate', brand:'Improve brand consistency', compete:'Stand out vs competitors', launch:'Testing before a big launch' };
+    const goalsText = Array.from(state.goals).map(g=>goalLabels[g]).join('; ') || 'General thumbnail improvement';
+    return { title, analytics, goalsText };
+  }
+
+  function buildUserContent(ctx, includeCompetitors){
+    const content = [];
+    content.push({ type:'image', source:{ type:'base64', media_type: state.thumb.mediaType, data: state.thumb.base64 } });
+    let textBlock = "This is the creator's thumbnail image, submitted for review.\n";
+    textBlock += "Creator's stated goals: " + ctx.goalsText + "\n";
+    if(ctx.title) textBlock += "Video title/description: \"" + ctx.title + "\"\n";
+    if(ctx.analytics) textBlock += "Real analytics provided by the creator: " + ctx.analytics + "\n";
+    if(!includeCompetitors && state.competitors.length){
+      textBlock += "(Competitor thumbnails were also uploaded but are not attached to this particular review.)\n";
+    }
+    content.push({ type:'text', text: textBlock });
+
+    if(includeCompetitors && state.competitors.length){
+      content.push({ type:'text', text: "Below are " + state.competitors.length + " competitor thumbnail(s) uploaded for comparison:" });
+      state.competitors.forEach((c, i)=>{
+        content.push({ type:'image', source:{ type:'base64', media_type:c.mediaType, data:c.base64 } });
+        content.push({ type:'text', text: "(competitor thumbnail " + (i+1) + ")" });
+      });
+    }
+    return content;
+  }
+
+  /* ---------------------------------------------------------------
+   * RENDER RESULTS
+   * ------------------------------------------------------------- */
+  const resultsCol = document.getElementById('results-col');
+
+  function scoreColor(score){
+    if(score === null || score === undefined) return 'var(--text-faint)';
+    if(score >= 75) return 'var(--good)';
+    if(score >= 50) return 'var(--gold)';
+    return 'var(--signal)';
+  }
+
+  function gaugeSVG(score, size){
+    size = size || 150;
+    const r = 62, c = 2*Math.PI*r;
+    const pct = Math.max(0, Math.min(100, score||0))/100;
+    const col = scoreColor(score);
+    return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 150 150">'+
+      '<circle cx="75" cy="75" r="'+r+'" fill="none" stroke="var(--surface-2)" stroke-width="12"/>'+
+      '<circle cx="75" cy="75" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="12" stroke-linecap="round" '+
+        'stroke-dasharray="'+c+'" stroke-dashoffset="'+(c*(1-pct))+'" style="transition:stroke-dashoffset 1.2s cubic-bezier(.2,.9,.2,1)"/>'+
+      '</svg>';
+  }
+
+  function appendReviewerCard(rv, parsed){
+    const wrap = document.createElement('details');
+    wrap.className = 'reviewer-detail card reveal';
+    const col = scoreColor(parsed.SCORE);
+    wrap.innerHTML =
+      '<summary>'+
+        '<span>'+rv.icon+'&nbsp;&nbsp;'+escapeHtml(rv.name)+'</span>'+
+        '<span class="sc" style="color:'+col+'">'+ (parsed.SCORE ?? '—') +'/100</span>'+
+      '</summary>'+
+      '<div class="body">'+
+        '<p>'+escapeHtml(parsed.SUMMARY)+'</p>'+
+        renderMiniList('Strengths', parsed.STRENGTHS, '+', 'var(--good)') +
+        renderMiniList('Weaknesses', parsed.WEAKNESSES, '\u2013', 'var(--signal)') +
+        renderMiniList('Missed opportunities', parsed.OPPORTUNITIES, '\u2605', 'var(--gold)') +
+        renderMiniList('Recommendations', parsed.RECOMMENDATIONS, '\u2192', 'var(--data)') +
+      '</div>';
+    resultsCol.appendChild(wrap);
+  }
+
+  function renderMiniList(label, items, bullet, color){
+    if(!items || !items.length) return '';
+    let html = '<p style="color:var(--text); font-weight:700; font-size:11.5px; text-transform:uppercase; letter-spacing:.05em; margin-top:12px;">'+label+'</p><ul style="list-style:none; margin-top:6px;">';
+    items.forEach(it=>{
+      html += '<li style="padding-left:16px; position:relative; margin-bottom:6px;"><span style="position:absolute; left:0; color:'+color+'; font-weight:800;">'+bullet+'</span>'+escapeHtml(it)+'</li>';
+    });
+    html += '</ul>';
+    return html;
+  }
+
+  function renderFinalReport(final, avgCategoryScores){
+    const overall = final.OVERALL_SCORE;
+    const card = document.createElement('div');
+    card.className = 'card reveal';
+    card.id = 'final-report-card';
+
+    let catBarsHtml = '<div class="cat-bars">';
+    avgCategoryScores.forEach(cs=>{
+      catBarsHtml += '<div class="cat-bar-row"><div class="top"><span class="nm">'+escapeHtml(cs.name)+'</span><span class="sc">'+cs.score+'/100</span></div>'+
+        '<div class="cat-track"><div class="cat-fill" style="width:'+cs.score+'%; background:'+scoreColor(cs.score)+';"></div></div></div>';
+    });
+    catBarsHtml += '</div>';
+
+    const verdictColor = scoreColor(overall);
+
+    card.innerHTML =
+      '<div class="eyebrow"><span class="num">STAGE&nbsp;04</span> FINAL REPORT</div>'+
+      '<div class="score-hero">'+
+        '<div class="gauge-wrap">'+gaugeSVG(overall)+'<div class="gauge-num"><div class="n">'+(overall ?? '—')+'</div><div class="l">/ 100</div></div></div>'+
+        '<div class="score-meta">'+
+          '<h3>Executive summary</h3>'+
+          '<p>'+escapeHtml(final.EXEC_SUMMARY)+'</p>'+
+          '<span class="verdict-tag" style="background:'+verdictColor+'22; color:'+verdictColor+';">'+escapeHtml(final.VERDICT || 'Reviewed')+'</span>'+
+        '</div>'+
+      '</div>'+
+      '<div style="margin-top:22px;"><h4 style="font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); margin-bottom:12px;">Category breakdown</h4>'+catBarsHtml+'</div>'+
+
+      '<div style="margin-top:24px;"><h4 style="font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); margin-bottom:12px;">Content health report</h4>'+
+      '<p style="font-size:13.5px; color:var(--text-dim);">'+escapeHtml(final.HEALTH_REPORT)+'</p></div>'+
+
+      '<div style="margin-top:24px;"><h4 style="font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); margin-bottom:12px;">Highest-impact improvements</h4>'+
+      '<ul style="list-style:none; display:flex; flex-direction:column; gap:8px;">'+
+      (final.TOP_IMPROVEMENTS||[]).map(function(t,i){ return '<li style="font-size:13px; color:var(--text-dim); padding-left:22px; position:relative;"><span style="position:absolute; left:0; font-family:var(--font-mono); color:var(--signal); font-weight:700;">'+(i+1)+'.</span>'+escapeHtml(t)+'</li>'; }).join('') +
+      '</ul></div>'+
+
+      '<div class="estimate-banner" style="margin-top:24px;">&#9888; AI ESTIMATE — directional only, not a performance guarantee</div>'+
+      '<p style="font-size:13.5px; color:var(--text-dim); margin-top:-10px;">'+escapeHtml(final.PREDICTED_PERFORMANCE)+'</p>'+
+
+      '<div style="margin-top:24px;"><h4 style="font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); margin-bottom:12px;">Before vs. after</h4>'+
+      '<div class="before-after">'+
+        '<div class="ba-box before"><span class="tag">Before</span><div class="title-txt">'+escapeHtml(final.BEFORE_TITLE||'(current title)')+'</div><p>'+escapeHtml(final.BEFORE_ASSESSMENT)+'</p></div>'+
+        '<div class="ba-box after"><span class="tag">After</span><div class="title-txt">'+escapeHtml(final.AFTER_TITLE||'(suggested rewrite)')+'</div><p>'+escapeHtml(final.AFTER_ASSESSMENT)+'</p></div>'+
+      '</div></div>'+
+
+      '<div class="two-col" style="margin-top:24px;">'+
+        '<div class="list-block"><h4>Alternative hooks</h4><ul>'+(final.ALT_HOOKS||[]).map(function(h){return '<li>'+escapeHtml(h)+'</li>';}).join('')+'</ul></div>'+
+        '<div class="list-block"><h4>Alternative titles</h4><ul>'+(final.ALT_TITLES||[]).map(function(h){return '<li>'+escapeHtml(h)+'</li>';}).join('')+'</ul></div>'+
+      '</div>'+
+
+      '<div style="margin-top:24px;"><h4 style="font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); margin-bottom:12px;">Publishing checklist</h4>'+
+      '<div class="checklist">'+(final.CHECKLIST||[]).map(function(c,i){return '<label><input type="checkbox" id="chk-'+i+'"><span>'+escapeHtml(c)+'</span></label>';}).join('')+'</div></div>'+
+
+      '<div style="margin-top:24px;"><h4 style="font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); margin-bottom:12px;">Go deeper</h4>'+
+      '<div class="chip-row" id="deepdive-chips">'+(final.DEEPER_PROMPTS||[]).map(function(p,i){return '<button class="chip" data-prompt="'+escapeHtml(p).replace(/"/g,'&quot;')+'">'+escapeHtml(p)+'</button>';}).join('')+'</div>'+
+      '<div id="deepdive-slot"></div></div>';
+
+    resultsCol.appendChild(card);
+
+    card.querySelectorAll('.chip').forEach(function(btn){
+      btn.addEventListener('click', function(){ runDeepDive(btn.dataset.prompt, btn); });
+    });
+
+    // animate bars
+    requestAnimationFrame(()=>{
+      card.querySelectorAll('.cat-fill').forEach(el=>{ const w = el.style.width; el.style.width = '0%'; requestAnimationFrame(()=>{ el.style.width = w; }); });
+    });
+  }
+
+  async function runDeepDive(promptText, btn){
+    const slot = document.getElementById('deepdive-slot');
+    const box = document.createElement('div');
+    box.className = 'deepdive-result';
+    box.textContent = 'Thinking through: "'+promptText+'" …';
+    slot.appendChild(box);
+    if(btn) btn.style.opacity = '.5';
+    try{
+      const ctx = buildContext();
+      const system = [
+        "You are the Synthesis Director of an elite YouTube thumbnail consultancy, continuing a completed review.",
+        "The creator wants to go deeper on one specific follow-up question about their thumbnail. Answer it directly and concretely, in flowing prose (2-5 short paragraphs or a tight bulleted list using '- ' prefixes). Do not repeat the full report — focus only on this question.",
+        "Do not use markdown headers, JSON, or code fences.",
+        TONE_TEXT[state.tone]
+      ].join("\n\n");
+      const content = buildUserContent(ctx, true);
+      content.push({ type:'text', text: "Follow-up question to go deeper on: " + promptText });
+      const raw = await callClaude(system, content, { maxTokens: 900 });
+      box.textContent = raw;
+    }catch(e){
+      box.textContent = "Couldn't complete that follow-up: " + e.message;
+    }finally{
+      if(btn) btn.style.opacity = '1';
+    }
+  }
+
+  /* ---------------------------------------------------------------
+   * PIPELINE
+   * ------------------------------------------------------------- */
+  function showError(message, retryFn){
+    const slot = document.getElementById('error-slot');
+    const box = document.createElement('div');
+    box.className = 'error-box';
+    box.innerHTML = '<span>&#9888; '+escapeHtml(message)+'</span>';
+    if(retryFn){
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.textContent = 'Retry';
+      btn.addEventListener('click', ()=>{ box.remove(); retryFn(); });
+      box.appendChild(btn);
+    }
+    slot.innerHTML = "";
+    slot.appendChild(box);
+  }
+
+  async function runPipeline(){
+    if(!state.thumb) return;
+    state.running = true;
+    tcSeconds = 0;
+    document.getElementById('error-slot').innerHTML = "";
+    runBtn.disabled = true;
+    runBtn.textContent = "Analyzing…";
+    scanline.classList.add('active');
+    document.getElementById('console-section').classList.remove('hidden');
+    resultsCol.innerHTML = "";
+    logBox = document.getElementById('log-box');
+    logBox.innerHTML = "";
+    document.getElementById('console-section').scrollIntoView({ behavior:'smooth', block:'start' });
+
+    state.reviewers = buildReviewerRoster();
+    state.results = {};
+    renderReviewerList();
+
+    log('Intake confirmed — thumbnail loaded'+(state.competitors.length ? ' with '+state.competitors.length+' competitor reference(s)' : '')+'.', 'ok');
+    log('Assembled a '+state.reviewers.length+'-specialist review panel for this upload.', 'ok');
+
+    const ctx = buildContext();
+
+    for(const rv of state.reviewers){
+      setStatus(rv.id, 'running');
+      log('→ '+rv.name+' is reviewing the thumbnail…');
+      const includeCompetitors = rv.id === 'competitive';
+      try{
+        const content = buildUserContent(ctx, includeCompetitors);
+        const raw = await callClaude(rv.system, content, { maxTokens: 900 });
+        const parsed = parseSections(raw);
+        state.results[rv.id] = parsed;
+        setStatus(rv.id, 'done');
+        log('✓ '+rv.name+' finished — score '+ (parsed.SCORE ?? 'n/a') +'/100', 'ok');
+        appendReviewerCard(rv, parsed);
+      }catch(err){
+        setStatus(rv.id, 'error');
+        log('✗ '+rv.name+' failed: '+err.message, 'err');
+        showError(rv.name + ' could not complete its review (' + err.message + ').', runPipeline);
+        state.running = false;
+        scanline.classList.remove('active');
+        runBtn.disabled = false;
+        runBtn.textContent = 'Run deep analysis';
+        return;
+      }
+    }
+
+    // synthesis stage
+    setStatus('synthesis', 'running');
+    log('→ Synthesis Director is reconciling all findings…');
+    try{
+      const final = await runSynthesis(ctx);
+      setStatus('synthesis', 'done');
+      log('✓ Synthesis complete — final report ready.', 'ok');
+
+      const catScores = state.reviewers.map(rv => ({ name: rv.name.replace(/ (Strategist|Analyst|Auditor|Forecaster)$/,''), score: state.results[rv.id].SCORE ?? 0 }));
+      renderFinalReport(final, catScores);
+      document.getElementById('final-report-card').scrollIntoView({ behavior:'smooth', block:'start' });
+    }catch(err){
+      setStatus('synthesis', 'error');
+      log('✗ Synthesis failed: '+err.message, 'err');
+      showError('Synthesis Director could not compile the final report (' + err.message + ').', runPipeline);
+    }
+
+    state.running = false;
+    scanline.classList.remove('active');
+    runBtn.disabled = false;
+    runBtn.textContent = 'Run deep analysis';
+  }
+
+  async function runSynthesis(ctx){
+    const findingsSummary = state.reviewers.map(rv=>{
+      const p = state.results[rv.id];
+      return rv.name.toUpperCase()+" (score "+p.SCORE+"/100): "+p.SUMMARY+
+        " Strengths: "+ (p.STRENGTHS||[]).join(" | ") +
+        ". Weaknesses: "+ (p.WEAKNESSES||[]).join(" | ") +
+        ". Opportunities: "+ (p.OPPORTUNITIES||[]).join(" | ") +
+        ". Recommendations: "+ (p.RECOMMENDATIONS||[]).join(" | ");
+    }).join("\n\n");
+
+    const system = [
+      "You are the Synthesis Director of an elite YouTube thumbnail consultancy. You have received independent findings from a panel of specialist reviewers who each inspected the same thumbnail. Your job is to reconcile their findings into one coherent, decisive final report for the creator.",
+      "You are also looking at the original thumbnail image yourself, so you can judge visual claims directly rather than only trusting the panel's notes.",
+      TONE_TEXT[state.tone],
+      "Respond ONLY in plain text using exactly this structure — no JSON, no markdown headers, no asterisks, no code fences:",
+      "OVERALL_SCORE: <single integer 0-100, your own holistic judgment, may differ slightly from a simple average of the panel>",
+      "VERDICT: <a short 2-4 word verdict tag, e.g. 'Strong, needs polish' or 'Not launch ready'>",
+      "EXEC_SUMMARY: <3-4 sentence executive summary of the overall verdict>",
+      "HEALTH_REPORT: <a short paragraph describing the overall health of this thumbnail as a piece of content — is it fundamentally sound with small fixes needed, or fundamentally flawed?>",
+      "TOP_IMPROVEMENTS:",
+      "- <highest impact improvement, ranked first>",
+      "- <second highest impact improvement>",
+      "- <third>",
+      "PREDICTED_PERFORMANCE: <a directional paragraph on predicted CTR/performance potential if the top improvements are made, explicitly phrased as an AI estimate, not a guarantee. Reference real analytics if the creator supplied any.>",
+      "BEFORE_TITLE: <the creator's current title verbatim if given, else write 'Untitled'>",
+      "AFTER_TITLE: <one rewritten, stronger title/hook pairing suggestion>",
+      "BEFORE_ASSESSMENT: <one sentence on what's weak about the current title/thumbnail pairing>",
+      "AFTER_ASSESSMENT: <one sentence on why the rewrite performs better>",
+      "ALT_HOOKS:",
+      "- <alternative curiosity hook angle 1>",
+      "- <alternative curiosity hook angle 2>",
+      "- <alternative curiosity hook angle 3>",
+      "ALT_TITLES:",
+      "- <alternative title 1>",
+      "- <alternative title 2>",
+      "- <alternative title 3>",
+      "CHECKLIST:",
+      "- <a concrete pre-publish checklist item>",
+      "- <another>",
+      "- <another>",
+      "- <another>",
+      "DEEPER_PROMPTS:",
+      "- <a short first-person follow-up question the creator could click to explore further, under 12 words>",
+      "- <another such follow-up prompt>",
+      "- <another such follow-up prompt>",
+      "Keep every bullet to one line of plain prose. Use the exact labels shown, each on its own line followed by a colon."
+    ].join("\n\n");
+
+    const content = buildUserContent(ctx, true);
+    content.push({ type:'text', text: "Here are the independent specialist findings to reconcile:\n\n" + findingsSummary });
+
+    const raw = await callClaude(system, content, { maxTokens: 1800 });
+    return parseSections(raw, FINAL_KEYS, FINAL_LIST_KEYS);
+  }
+
+  /* ---------------------------------------------------------------
+   * INIT
+   * ------------------------------------------------------------- */
+  runBtn.addEventListener('click', runPipeline);
+  refreshRunEnabled();
+  renderCompetitorStrip();
+
+})();
+</script>
+</body>
+</html>
