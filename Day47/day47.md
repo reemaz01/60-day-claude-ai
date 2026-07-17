@@ -14,7 +14,7 @@ An AI-powered application that evaluates YouTube thumbnails using a panel of spe
 
 Upload a thumbnail, provide the video title, configure review intensity, choose optimization goals, and optionally compare against competitor thumbnails.
 
-![Upload Interface](Day47/01-upload-interface.png.png)
+![Upload Interface](ea7d170c0ec1267ace0210978271184f79f605ed)
 
 ---
 
