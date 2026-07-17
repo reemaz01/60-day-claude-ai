@@ -22,7 +22,7 @@ Upload a thumbnail, provide the video title, configure review intensity, choose 
 
 The uploaded thumbnail is displayed alongside metadata inputs before the AI review process begins.
 
-![Thumbnail Uploaded](02-upload-thumbnail.png)
+![Thumbnail Uploaded](Day47/02-upload-thumbnail.png)
 
 ---
 
@@ -38,7 +38,7 @@ Agents include:
 - CTR Performance Forecaster
 - Synthesis Director
 
-![Reviewer Panel](03-review-panel.png)
+![Reviewer Panel](Day47/03-review-panel.png)
 
 ---
 
@@ -54,7 +54,7 @@ Displayed metrics include:
 - Category Breakdown
 - Content Health Report
 
-![Executive Summary](04-executive-summary.png)
+![Executive Summary](Day47/04-executive-summary.png)
 
 ---
 
@@ -69,7 +69,7 @@ Examples include:
 - Strengthen visual hierarchy
 - Increase brand consistency
 
-![Recommendations](05-improvements.png)
+![Recommendations](Day47/05-improvements.png)
 
 ---
 
@@ -77,14 +77,14 @@ Examples include:
 
 The final section generates optimized hooks, alternative video titles, publishing suggestions, and creator checklists for maximizing thumbnail performance.
 
-![Final Suggestions](06-final-report.png)
+![Final Suggestions](Day47/06-final-report.png)
 
 ---
 
 # 🌐 Generated HTML File
 
 
-![Content-Intelligence-Studio](contentintelligentstudio.html)
+![Content-Intelligence-Studio](Day47/contentintelligentstudio.html)
 
 
 The generated HTML contains the complete AI application, including:
