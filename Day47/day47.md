@@ -22,7 +22,7 @@ Upload a thumbnail, provide the video title, configure review intensity, choose 
 
 The uploaded thumbnail is displayed alongside metadata inputs before the AI review process begins.
 
-![Thumbnail Uploaded](01-upload-interface.png)
+![Thumbnail Uploaded](02-upload-thumbnail.png)
 
 ---
 
