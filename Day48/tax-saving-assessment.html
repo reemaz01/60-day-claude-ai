@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tax-Saving Instrument Assessment — PPF · EPF · NPS · ELSS</title>
+<style>
+  :root{
+    --navy:#0F1B2B;
+    --navy-2:#152640;
+    --navy-line:#28405A;
+    --parchment:#F4EEE0;
+    --parchment-2:#EDE4CE;
+    --ink:#1C2B3A;
+    --ink-soft:#4C5A6B;
+    --hairline:#D9CFB2;
+    --gold:#B8923F;
+    --gold-deep:#8C6D2C;
+    --teal:#2F6F62;
+    --teal-deep:#1F4C43;
+    --rust:#A54B33;
+    --paper-shadow: 0 18px 50px rgba(15,27,43,.35);
+    --serif: "Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    --mono: ui-monospace,"SFMono-Regular","Cascadia Mono","Roboto Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 700px at 15% -10%, #1A2E48 0%, transparent 60%),
+      radial-gradient(1000px 600px at 110% 10%, #16283F 0%, transparent 55%),
+      var(--navy);
+    color:var(--ink);
+    font-family:var(--sans);
+    padding:32px 18px 80px;
+    min-height:100vh;
+  }
+  .wrap{max-width:1040px;margin:0 auto;}
+
+  /* ---------- Cover / masthead ---------- */
+  .masthead{
+    color:#EFE7D2;
+    padding:6px 6px 28px;
+    border-bottom:1px solid rgba(239,231,210,.18);
+    margin-bottom:26px;
+  }
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--gold);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);display:inline-block;}
+  .masthead h1{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:clamp(28px,4.4vw,42px);
+    line-height:1.12;
+    margin:0 0 12px;
+    letter-spacing:.2px;
+  }
+  .masthead p.sub{
+    font-size:15.5px;
+    line-height:1.55;
+    color:#C7D0DC;
+    max-width:640px;
+    margin:0;
+  }
+  .masthead .meta{
+    margin-top:20px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:22px;
+    font-family:var(--mono);
+    font-size:12px;
+    color:#9FB0C4;
+  }
+  .masthead .meta b{color:#EFE7D2;font-weight:600;}
+
+  /* ---------- Panels on parchment ---------- */
+  .paper{
+    background:var(--parchment);
+    border-radius:6px;
+    box-shadow:var(--paper-shadow);
+    border:1px solid #d8c9a0;
+    position:relative;
+    margin-bottom:22px;
+    overflow:hidden;
+  }
+  .paper::before{
+    content:"";
+    position:absolute;top:0;left:0;right:0;height:4px;
+    background:linear-gradient(90deg,var(--gold-deep),var(--gold) 40%,var(--teal) 100%);
+  }
+  .paper-inner{padding:26px 26px 28px;}
+  @media (max-width:640px){ .paper-inner{padding:20px 16px 22px;} }
+
+  .section-title{
+    font-family:var(--serif);
+    font-size:22px;
+    font-weight:600;
+    color:var(--ink);
+    margin:0 0 4px;
+  }
+  .section-note{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    margin:0 0 20px;
+    max-width:620px;
+    line-height:1.5;
+  }
+
+  /* ---------- Loading skeleton ---------- */
+  #loadingState{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:34px 26px;
+    color:var(--ink-soft);
+    font-family:var(--mono);
+    font-size:13px;
+  }
+  .spinner{
+    width:16px;height:16px;border-radius:50%;
+    border:2px solid #cbbf9a; border-top-color:var(--gold-deep);
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #appContent{display:none;}
+  #appContent.show{display:block; animation:fadeUp .45s ease both;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ---------- Ledger ranking ---------- */
+  .rank-row{
+    display:grid;
+    grid-template-columns:56px 1fr auto;
+    align-items:center;
+    gap:16px;
+    padding:16px 14px;
+    border-top:1px solid var(--hairline);
+  }
+  .rank-row:first-of-type{border-top:none;}
+  .rank-num{
+    font-family:var(--serif);
+    font-size:26px;
+    color:var(--gold-deep);
+    text-align:center;
+    font-weight:600;
+  }
+  .rank-main .name-line{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .rank-main .name-line h3{
+    font-family:var(--serif);
+    font-size:19px;
+    margin:0;
+    color:var(--ink);
+  }
+  .full-name{font-size:12.5px;color:var(--ink-soft);}
+  .seal{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+    background:var(--teal); color:#EFF6F3;
+    border-radius:999px; padding:3px 10px 3px 8px;
+    border:1px solid var(--teal-deep);
+  }
+  .seal::before{content:"●"; font-size:8px; color:#BFE3D6;}
+  .bar-track{
+    margin-top:9px;
+    height:8px;width:100%;max-width:420px;
+    background:#e6dcc0;
+    border-radius:5px;
+    overflow:hidden;
+    border:1px solid #d3c497;
+  }
+  .bar-fill{height:100%; background:linear-gradient(90deg,var(--teal-deep),var(--teal)); border-radius:5px;}
+  .rank-score{
+    text-align:right;
+    font-family:var(--mono);
+  }
+  .rank-score .num{font-size:20px;color:var(--ink);font-weight:600;}
+  .rank-score .of{font-size:11px;color:var(--ink-soft);}
+
+  /* ---------- Comparison table ---------- */
+  .tbl-scroll{overflow-x:auto; border:1px solid var(--hairline); border-radius:4px;}
+  table.cmp{border-collapse:collapse; width:100%; min-width:720px; font-size:13.5px;}
+  table.cmp thead th{
+    background:var(--navy-2);
+    color:#EFE7D2;
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:15px;
+    text-align:left;
+    padding:12px 14px;
+    position:sticky; top:0;
+  }
+  table.cmp thead th.crit-col{width:170px; color:#C7D0DC; font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.06em; font-weight:600;}
+  table.cmp tbody th{
+    text-align:left;
+    font-family:var(--mono);
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color:var(--ink-soft);
+    background:var(--parchment-2);
+    padding:12px 14px;
+    vertical-align:top;
+    border-top:1px solid var(--hairline);
+    width:170px;
+  }
+  table.cmp tbody td{
+    padding:12px 14px;
+    border-top:1px solid var(--hairline);
+    border-left:1px solid var(--hairline);
+    vertical-align:top;
+    line-height:1.5;
+    color:var(--ink);
+  }
+  table.cmp tbody tr:hover td, table.cmp tbody tr:hover th{background:#f7f1de;}
+  .cite{
+    font-family:var(--mono);
+    color:var(--gold-deep);
+    cursor:pointer;
+    font-size:11px;
+    vertical-align:super;
+    text-decoration:none;
+    padding:0 1px;
+  }
+  .cite:hover{text-decoration:underline;}
+  .flag-est{
+    display:inline-block;margin-top:6px;
+    font-family:var(--mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase;
+    color:#7A3320; background:#F3DFD3; border:1px solid #DDB6A2;
+    padding:2px 7px; border-radius:3px;
+  }
+  .flag-safe{
+    display:inline-block;margin-top:6px;
+    font-family:var(--mono); font-size:10px; letter-spacing:.05em; text-transform:uppercase;
+    color:var(--teal-deep); background:#DCEAE4; border:1px solid #B7D6C9;
+    padding:2px 7px; border-radius:3px;
+  }
+  .recommended-col{background:#FBF6E7 !important;}
+  th.recommended-col{background:#F0E6C4 !important; color:var(--gold-deep) !important;}
+
+  /* ---------- Collapsibles ---------- */
+  .collapse-head{
+    display:flex; align-items:center; justify-content:space-between;
+    cursor:pointer; user-select:none;
+    padding:4px 0 2px;
+  }
+  .collapse-head h2{
+    font-family:var(--serif); font-size:20px; margin:0; color:var(--ink); font-weight:600;
+  }
+  .chev{
+    width:26px;height:26px;border-radius:50%;
+    border:1px solid var(--hairline); background:#fff8ea;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--gold-deep); font-size:13px;
+    transition:transform .25s ease;
+    flex-shrink:0;
+  }
+  .collapse-body{
+    max-height:0; overflow:hidden;
+    transition:max-height .35s ease;
+  }
+  .collapse-body-inner{padding-top:16px;}
+  .paper.open .chev{transform:rotate(180deg);}
+
+  /* sources */
+  .src-search{
+    width:100%; padding:9px 12px; margin-bottom:14px;
+    border:1px solid var(--hairline); border-radius:4px;
+    background:#fff; font-family:var(--sans); font-size:13.5px; color:var(--ink);
+  }
+  .src-search:focus{outline:2px solid var(--gold); outline-offset:1px;}
+  .src-list{list-style:none;margin:0;padding:0;}
+  .src-item{
+    display:grid; grid-template-columns:26px 1fr; gap:10px;
+    padding:9px 4px; border-top:1px solid var(--hairline);
+    font-size:13px; line-height:1.5;
+  }
+  .src-item:first-child{border-top:none;}
+  .src-item .n{font-family:var(--mono); color:var(--gold-deep); font-weight:600;}
+  .src-item .pub{color:var(--ink-soft); font-family:var(--mono); font-size:11.5px; text-transform:uppercase; letter-spacing:.03em; margin-right:6px;}
+  .src-item a{color:var(--ink); text-decoration:none; border-bottom:1px solid var(--hairline);}
+  .src-item a:hover{border-color:var(--gold-deep);}
+  .src-item.highlight{background:#FBF3D9;}
+  #srcEmpty{display:none; padding:14px 4px; color:var(--ink-soft); font-size:13.5px; font-style:italic;}
+
+  /* methodology */
+  .method-block{margin-bottom:18px;}
+  .method-block h4{font-family:var(--serif); font-size:15.5px; margin:0 0 6px; color:var(--ink);}
+  .method-block p, .method-block li{font-size:13.5px; line-height:1.6; color:var(--ink-soft); margin:0 0 4px;}
+  .weights-grid{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:10px; margin:12px 0 18px;
+  }
+  .weight-chip{
+    border:1px solid var(--hairline); background:#fff8ea; border-radius:4px;
+    padding:9px 11px;
+  }
+  .weight-chip .w-name{font-size:11.5px; font-family:var(--mono); text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft);}
+  .weight-chip .w-val{font-family:var(--serif); font-size:19px; color:var(--gold-deep); font-weight:600;}
+  .conflict{
+    border-left:3px solid var(--rust);
+    background:#FBF0EB; padding:10px 14px; border-radius:0 4px 4px 0;
+    margin-bottom:10px;
+  }
+  .conflict b{color:var(--rust);}
+
+  /* disclaimer footer */
+  .foot{
+    text-align:center; color:#93A2B5; font-size:12px; line-height:1.7;
+    padding:24px 10px 4px; font-family:var(--mono);
+  }
+  .foot b{color:#C7D0DC;}
+
+  @media (max-width:560px){
+    .rank-row{grid-template-columns:36px 1fr; row-gap:8px;}
+    .rank-score{grid-column:1 / -1; text-align:left; display:flex; align-items:baseline; gap:8px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div class="eyebrow"><span class="dot"></span>Compare &amp; Decide · Personal Finance Dossier</div>
+    <h1>PPF vs EPF vs NPS vs ELSS</h1>
+    <p class="sub">A sourced assessment for a young salaried professional in India deciding where to place fresh tax-saving contributions this financial year — built from verified rates, limits, and withdrawal rules rather than assumptions.</p>
+    <div class="meta">
+      <span><b>Filed for</b> · FY 2026–27, salaried taxpayer (old tax regime, Section 80C/80CCD)</span>
+      <span><b>Rates as of</b> · July 2026</span>
+      <span><b>Sources cited</b> · 25</span>
+    </div>
+  </div>
+
+  <div id="loadingState">
+    <span class="spinner"></span>
+    <span>Verifying rates and withdrawal rules against cited sources…</span>
+  </div>
+
+  <div id="appContent">
+
+    <!-- ============ RANKED VERDICT ============ -->
+    <section class="paper">
+      <div class="paper-inner">
+        <h2 class="section-title">The ranking</h2>
+        <p class="section-note">A single fixed order, weighted for this reader — a salaried professional prioritising returns and tax efficiency, while still weighing safety and access to the money. Weighting method is fully disclosed in “How this was researched” below.</p>
+        <div id="rankList"></div>
+      </div>
+    </section>
+
+    <!-- ============ COMPARISON TABLE ============ -->
+    <section class="paper">
+      <div class="paper-inner">
+        <h2 class="section-title">Criterion-by-criterion</h2>
+        <p class="section-note">Superscript numbers cite the source panel below. Figures marked <span class="flag-est" style="margin:0 2px;">estimate</span> are historical ranges or market-linked projections, not guaranteed values.</p>
+        <div class="tbl-scroll">
+          <table class="cmp" id="cmpTable"></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SOURCES ============ -->
+    <section class="paper" id="sourcesPanel">
+      <div class="paper-inner">
+        <div class="collapse-head" data-target="sourcesBody">
+          <h2>Cited sources (25)</h2>
+          <span class="chev">⌄</span>
+        </div>
+        <div class="collapse-body" id="sourcesBody">
+          <div class="collapse-body-inner">
+            <input type="text" class="src-search" id="srcSearch" placeholder="Filter sources — try “EPFO”, “SEBI”, “withdrawal”…">
+            <ul class="src-list" id="srcList"></ul>
+            <div id="srcEmpty">No sources match that filter. Try a broader term like “PPF” or “tax”.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ METHODOLOGY ============ -->
+    <section class="paper" id="methodPanel">
+      <div class="paper-inner">
+        <div class="collapse-head" data-target="methodBody">
+          <h2>How this was researched</h2>
+          <span class="chev">⌄</span>
+        </div>
+        <div class="collapse-body" id="methodBody">
+          <div class="collapse-body-inner" id="methodContent"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="foot">
+      <b>Not financial advice.</b> Rates are set quarterly (PPF) or annually (EPF/NPS) by government bodies and can change.<br>
+      Built as an educational comparison tool — verify current figures on EPFO, NPS Trust, and SEBI sites before investing.
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ===================== DATA LAYER ===================== */
+const sources = [
+  {n:1, pub:"ClearTax", title:"Public Provident Fund: PPF Interest Rate 2026", url:"https://cleartax.in/s/ppf"},
+  {n:2, pub:"The India Post", title:"PPF Interest Rate 2026: Current Rate, History", url:"https://indiapost.org/ppf-interest-rate"},
+  {n:3, pub:"ICICI Bank", title:"PPF Calculator – Interest Rate & Maturity", url:"https://www.icici.bank.in/personal-banking/investments/ppf/ppf-calculator"},
+  {n:4, pub:"DD News (Govt. of India)", title:"EPFO retains 8.25% interest rate on PF deposits for 2025-26", url:"https://ddnews.gov.in/en/epfo-retains-8-25-interest-rate-on-pf-deposits-for-2025-26/"},
+  {n:5, pub:"News on Air (Govt. of India)", title:"EPFO notifies 8.25% interest rate on EPF deposits for FY 2025-26", url:"https://newsonair.gov.in/epfo-notifies-8-25-interest-rate-on-epf-deposits-for-fy-2025-26/"},
+  {n:6, pub:"Bajaj Finserv", title:"EPF Interest Rate — FY 2025-26", url:"https://www.bajajfinserv.in/investments/epf-interest-rate"},
+  {n:7, pub:"StableMoney", title:"EPF/PF Withdrawal Rules 2026", url:"https://stablemoney.in/investments/pf-withdrawal-rules-2025-guide"},
+  {n:8, pub:"HDFC Bank", title:"EPFO New Rules for 2025", url:"https://www.hdfcbank.com/personal/resources/learning-centre/save/new-rules-for-epfo-2025"},
+  {n:9, pub:"Business Standard", title:"Interest on EPF taxable, partial withdrawal not allowed after retirement", url:"https://www.business-standard.com/amp/article/pf/interest-on-epf-taxable-partial-withdrawal-not-allowed-after-retirement-121030600005_1.html"},
+  {n:10, pub:"ClearTax", title:"Taxation of Interest on EPF Contribution Exceeding ₹2.5 Lakh", url:"https://cleartax.in/s/epf-interest-taxation-exceeding-2-5-lakh"},
+  {n:11, pub:"Bajaj Finserv Markets", title:"NPS Interest Rate 2026", url:"https://www.bajajfinservmarkets.in/nps-national-pension-scheme/nps-scheme-interest-rate"},
+  {n:12, pub:"PolicyBazaar", title:"Latest NPS Interest Rate as of 2026", url:"https://www.policybazaar.com/life-insurance/pension-plans/nps-national-pension-scheme/nps-interest-rate/"},
+  {n:13, pub:"Bajaj Finserv", title:"NPS Returns: Tier 1 & Tier 2 Pension Fund Performance", url:"https://www.bajajfinserv.in/investments/nps-returns"},
+  {n:14, pub:"ClearTax", title:"Top Performing NPS Schemes 2026", url:"https://cleartax.in/s/top-performing-nps-schemes"},
+  {n:15, pub:"FinanceToolsPro", title:"NPS Fund Choice Guide India 2026", url:"https://www.financetoolspro.com/guides/nps/nps-fund-choice-guide.html"},
+  {n:16, pub:"The India Post", title:"NPS Withdrawal and Exit Rules 2026", url:"https://indiapost.org/nps-withdrawal-rules"},
+  {n:17, pub:"ClearTax", title:"NPS Calculator 2026 — 80CCD(1B) deduction", url:"https://cleartax.in/s/nps-calculator"},
+  {n:18, pub:"1Finance", title:"New NPS withdrawal rules: 80% lumpsum, taxation", url:"https://1finance.co.in/blog/new-nps-withdrawal-rules-taxation/"},
+  {n:19, pub:"SEBI Investor Education", title:"A Guide to ELSS (Equity-Linked Savings Scheme)", url:"https://investor.sebi.gov.in/elss.html"},
+  {n:20, pub:"Aditya Birla Capital", title:"How ELSS 3-Year Lock-in Period Works", url:"https://www.adityabirlacapital.com/abc-of-money/how-does-the-3-year-lock-in-of-elss-funds-work"},
+  {n:21, pub:"ClearTax", title:"ELSS Mutual Funds — Tax-Saving Guide", url:"https://cleartax.in/s/elss"},
+  {n:22, pub:"ClearTax", title:"ELSS Lock-in Period Explained", url:"https://cleartax.in/s/elss-lock-in-period"},
+  {n:23, pub:"Paytm Money", title:"ELSS Funds — Tax Saving Mutual Funds 2026", url:"https://www.paytmmoney.com/mutual-funds/elss-funds"},
+  {n:24, pub:"Business Standard", title:"Don't let weak returns of ELSS category in 2022 deter you (10-yr avg 13.7%)", url:"https://www.business-standard.com/amp/article/pf/don-t-let-weak-investment-returns-of-elss-category-in-2022-deter-you-123010500851_1.html"},
+  {n:25, pub:"Business Standard", title:"Don't let poor three-year returns deter you from investing in ELSS", url:"https://www.business-standard.com/article/pf/don-t-let-poor-three-year-returns-deter-you-from-investing-in-elss-120112000004_1.html"}
+];
+
+// weights used for the fixed ranking (sum = 100)
+const weights = {returns:25, tax:20, safety:15, liquidity:15, withdrawal:15, limits:10};
+
+const options = [
+  {
+    id:"epf", name:"EPF", full:"Employees’ Provident Fund",
+    scores:{returns:6.5, tax:8, safety:9, liquidity:5, withdrawal:6, limits:6},
+    cells:{
+      returns:'8.25% p.a. for FY 2025-26 — declared by EPFO’s Central Board of Trustees, ratified by the Finance Ministry, unchanged for the third straight year.<span class="cite" data-n="4,5,6">[4,5,6]</span>',
+      liquidity:'No account-level lock-in, but access is tied to employment. Full withdrawal on retirement or after 2 months of continuous unemployment (75% after 1 month, remaining 25% after 2).<span class="cite" data-n="7">[7]</span>',
+      tax:'EEE — 12% employer + 12% employee contribution, both tax-exempt. But interest on the employee’s own contribution above ₹2.5 lakh/year is taxable (₹5 lakh for accounts with no employer match), with TDS deducted by EPFO.<span class="cite" data-n="10">[10]</span>',
+      safety:'Sovereign-backed, government-managed scheme under the EPF &amp; MP Act, 1952. Rate is fixed annually, not market-quoted daily.<span class="cite" data-n="4,5">[4,5]</span><span class="flag-safe">Guaranteed</span>',
+      limits:'Mandatory 12% of basic + DA from both employee and employer (10% for establishments with &lt;20 staff). Voluntary top-up via VPF has no upper cap.<span class="cite" data-n="10">[10]</span>',
+      withdrawal:'Partial “advances” permitted after 12 months of service for housing, medical emergencies, education, or marriage — now simplified into three broad categories, with no employer approval needed for most claims.<span class="cite" data-n="7,8">[7,8]</span>'
+    }
+  },
+  {
+    id:"elss", name:"ELSS", full:"Equity-Linked Savings Scheme (tax-saver mutual funds)",
+    scores:{returns:8, tax:6, safety:3, liquidity:9, withdrawal:6, limits:8},
+    cells:{
+      returns:'No fixed rate — market-linked. Category average has run near 13.7% over 10 years, but was as low as 4.3% over a recent 3-year stretch before recovering to 8.9% over 1 year; individual funds range roughly 15–19% over 5 years.<span class="cite" data-n="24,25,23">[24,25,23]</span><span class="flag-est">Estimate / range</span>',
+      liquidity:'Shortest lock-in of any Section 80C instrument — exactly 3 years from each investment or SIP instalment, then fully liquid with no exit load.<span class="cite" data-n="19,20,22">[19,20,22]</span>',
+      tax:'Contribution up to ₹1.5 lakh/year deductible under Section 80C (old tax regime only). LTCG above ₹1.25 lakh in a financial year is taxed at 12.5%, without indexation.<span class="cite" data-n="21,22">[21,22]</span>',
+      safety:'At least 80% invested in equities — no capital or return guarantee. Value can and does fall in a downturn (category posted just 1.9% in one recent calendar year).<span class="cite" data-n="19,25">[19,25]</span>',
+      limits:'Minimum investment as low as ₹500 (lump sum or SIP); no upper ceiling on how much you can invest, though the 80C deduction itself caps out at ₹1.5 lakh.<span class="cite" data-n="21">[21]</span>',
+      withdrawal:'Zero access during the 3-year lock-in — no loans, no partial withdrawal, no premature exit. Fully redeemable in one go the moment each lot clears its lock-in.<span class="cite" data-n="19,22">[19,22]</span>'
+    }
+  },
+  {
+    id:"ppf", name:"PPF", full:"Public Provident Fund",
+    scores:{returns:5, tax:10, safety:10, liquidity:4, withdrawal:4, limits:5},
+    cells:{
+      returns:'7.1% p.a., fixed and government-set every quarter; unchanged since April 2020, one of the longest stable runs in the scheme’s history.<span class="cite" data-n="1,2">[1,2]</span>',
+      liquidity:'15-year maturity. Partial withdrawal allowed from the 5th financial year; a loan against the balance is available from the 1st year (up to 25% of balance).<span class="cite" data-n="1">[1]</span>',
+      tax:'Full EEE status — contribution (up to ₹1.5 lakh/year) is deductible, and both interest and maturity proceeds are entirely tax-free, with no ceiling on the tax-free interest.<span class="cite" data-n="1,3">[1,3]</span>',
+      safety:'Sovereign-guaranteed small savings scheme; principal and declared interest carry no market risk whatsoever.<span class="cite" data-n="3">[3]</span><span class="flag-safe">Guaranteed</span>',
+      limits:'Minimum ₹500/year, maximum ₹1.5 lakh/year — the tightest ceiling of the four options.<span class="cite" data-n="1">[1]</span>',
+      withdrawal:'Comparatively rigid: a loan (25% of balance) from year 1, one partial withdrawal per year from year 5, full access only at 15-year maturity (extendable in 5-year blocks).<span class="cite" data-n="1">[1]</span>'
+    }
+  },
+  {
+    id:"nps", name:"NPS", full:"National Pension System (Tier I)",
+    scores:{returns:7.5, tax:6, safety:5, liquidity:2, withdrawal:3, limits:8},
+    cells:{
+      returns:'No declared rate — PFRDA-regulated fund managers have historically delivered roughly 9–12% p.a. blended across equity, corporate debt and government bonds; 5-year equity sleeves have ranged 18–21%.<span class="cite" data-n="11,12,13">[11,12,13]</span><span class="flag-est">Estimate / range</span>',
+      liquidity:'Locked until age 60. Up to 3–4 partial withdrawals allowed in a lifetime (once every 4 years), capped at 25% of the subscriber’s own contributions, for specific purposes only.<span class="cite" data-n="15,18">[15,18]</span>',
+      tax:'EEE on the way in, with an extra ₹50,000 deduction under Section 80CCD(1B) over and above the ₹1.5 lakh 80C limit. At exit, only the lump-sum portion is tax-free under Sec 10(12A); the annuity purchased with the rest pays out as taxable income.<span class="cite" data-n="17,16">[17,16]</span>',
+      safety:'Market-linked across equity, corporate debt and government securities; PFRDA caps equity exposure and bars small-cap/foreign investment, but returns are not guaranteed.<span class="cite" data-n="15">[15]</span>',
+      limits:'Minimum ₹500/year (Tier I); no upper cap on contribution, and the 80CCD(1B) deduction is genuinely additional to 80C headroom.<span class="cite" data-n="15,17">[15,17]</span>',
+      withdrawal:'The most restrictive of the four. Historically 60% lump sum / 40% mandatory annuity at 60; late-2025 reforms raised the lump-sum cap to 80% for non-government subscribers, but only 60% of that is confirmed tax-free under current tax law — the extra 20% is taxable.<span class="cite" data-n="18,16">[18,16]</span>'
+    }
+  }
+];
+
+const criteria = [
+  {key:"returns", label:"Expected returns"},
+  {key:"liquidity", label:"Lock-in &amp; liquidity"},
+  {key:"tax", label:"Tax treatment"},
+  {key:"safety", label:"Risk level"},
+  {key:"limits", label:"Contribution limits"},
+  {key:"withdrawal", label:"Withdrawal flexibility"}
+];
+
+/* ===================== SCORING ===================== */
+function weightedScore(o){
+  let total = 0;
+  for(const k in weights){ total += (o.scores[k] * weights[k]/100); }
+  return Math.round(total*100)/100;
+}
+options.forEach(o=>{ o.total = weightedScore(o); });
+const ranked = [...options].sort((a,b)=> b.total - a.total);
+
+/* ===================== RENDER: RANKING ===================== */
+function renderRanking(){
+  const el = document.getElementById('rankList');
+  const maxScore = 10; // scale ceiling
+  el.innerHTML = ranked.map((o,i)=>{
+    const pct = Math.min(100, (o.total/maxScore)*100);
+    return `
+      <div class="rank-row">
+        <div class="rank-num">${i+1}</div>
+        <div class="rank-main">
+          <div class="name-line">
+            <h3>${o.name}</h3>
+            <span class="full-name">${o.full}</span>
+            ${i===0 ? '<span class="seal">Top ranked</span>' : ''}
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+        </div>
+        <div class="rank-score">
+          <div class="num">${o.total.toFixed(2)}</div>
+          <div class="of">/ 10 weighted</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ===================== RENDER: TABLE ===================== */
+function renderTable(){
+  const topId = ranked[0].id;
+  let thead = '<thead><tr><th class="crit-col">Criterion</th>' +
+    options.map(o=>`<th class="${o.id===topId?'recommended-col':''}">${o.name}</th>`).join('') +
+    '</tr></thead>';
+  let tbody = '<tbody>' + criteria.map(c=>{
+    return `<tr><th>${c.label}</th>` +
+      options.map(o=>`<td class="${o.id===topId?'recommended-col':''}">${o.cells[c.key]}</td>`).join('') +
+      '</tr>';
+  }).join('') + '</tbody>';
+  document.getElementById('cmpTable').innerHTML = thead + tbody;
+}
+
+/* ===================== RENDER: SOURCES ===================== */
+function renderSources(list){
+  const ul = document.getElementById('srcList');
+  const empty = document.getElementById('srcEmpty');
+  if(list.length === 0){
+    ul.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  ul.innerHTML = list.map(s=>`
+    <li class="src-item" id="src-${s.n}">
+      <span class="n">${s.n}.</span>
+      <span><span class="pub">${s.pub}</span>${s.title} — <a href="${s.url}" target="_blank" rel="noopener">${new URL(s.url).hostname.replace('www.','')}</a></span>
+    </li>`).join('');
+}
+
+/* ===================== RENDER: METHODOLOGY ===================== */
+function renderMethod(){
+  const wchips = Object.entries({
+    returns:"Expected returns", tax:"Tax treatment", safety:"Risk level",
+    liquidity:"Lock-in & liquidity", withdrawal:"Withdrawal flexibility", limits:"Contribution limits"
+  }).map(([k,label])=>`
+    <div class="weight-chip">
+      <div class="w-name">${label}</div>
+      <div class="w-val">${weights[k]}%</div>
+    </div>`).join('');
+
+  document.getElementById('methodContent').innerHTML = `
+    <div class="method-block">
+      <h4>Who the ranking is weighted for</h4>
+      <p>The fixed order above is not a neutral average — it's weighted the way a young salaried professional choosing where to route <em>fresh, discretionary</em> tax-saving money would reasonably prioritise things: returns and tax efficiency matter most, safety and access matter, and the annual contribution ceiling matters least. Someone closer to retirement, or someone who wants zero volatility, would land on a different order.</p>
+    </div>
+    <div class="method-block">
+      <h4>Weights applied (sum to 100%)</h4>
+      <div class="weights-grid">${wchips}</div>
+      <p>Each instrument was scored 0–10 on every criterion from the sourced facts in the comparison table, then combined using these weights into the single score shown in the ranking.</p>
+    </div>
+    <div class="method-block">
+      <h4>Conflicts between sources, and how they were resolved</h4>
+      <div class="conflict"><b>ELSS returns —</b> category averages vary sharply by measurement window: a 10-year average near 13.7% co-exists with a recent 3-year average as low as 4.3% and a 1-year figure of 8.9% in the same source family. Resolved by presenting all three as a range with an explicit "estimate" flag rather than picking one headline number.</div>
+      <div class="conflict"><b>NPS lump-sum withdrawal —</b> most explainer sites still describe the long-standing 60% lump-sum / 40% annuity split, while several late-2025/2026 sources describe a PFRDA reform raising the non-government lump-sum cap to 80%. The table reflects both, and flags that current tax law (Section 10(12A)) still only confirms 60% as tax-free — the newer 20% sits in a gap between the investment rule and the tax rule.</div>
+      <div class="conflict"><b>EPF taxable-interest threshold —</b> some general EPF explainers omit the ₹2.5 lakh/₹5 lakh contribution ceiling on tax-free interest entirely. A dedicated ClearTax explainer of the 2021 amendment was used as the authoritative figure since it cites the underlying CBDT notification.</div>
+    </div>
+    <div class="method-block">
+      <h4>What isn't in this comparison</h4>
+      <ul>
+        <li>Fund-manager-level or scheme-level selection within NPS and ELSS (returns vary meaningfully by fund manager and individual scheme).</li>
+        <li>Employer contribution mechanics for NPS under Section 80CCD(2), which change the calculus for someone whose employer offers a matching NPS benefit.</li>
+        <li>State-specific or profession-specific variants (e.g. GPF for government employees).</li>
+      </ul>
+    </div>
+  `;
+}
+
+/* ===================== INTERACTIONS ===================== */
+function initCollapsibles(){
+  document.querySelectorAll('.collapse-head').forEach(head=>{
+    const targetId = head.getAttribute('data-target');
+    const body = document.getElementById(targetId);
+    head.addEventListener('click', ()=>{
+      const panel = head.closest('.paper');
+      const isOpen = panel.classList.contains('open');
+      if(isOpen){
+        body.style.maxHeight = '0px';
+        panel.classList.remove('open');
+      } else {
+        body.style.maxHeight = body.scrollHeight + 'px';
+        panel.classList.add('open');
+      }
+    });
+  });
+}
+
+function initSourceSearch(){
+  const input = document.getElementById('srcSearch');
+  input.addEventListener('input', ()=>{
+    const q = input.value.trim().toLowerCase();
+    const filtered = q === '' ? sources : sources.filter(s =>
+      s.pub.toLowerCase().includes(q) || s.title.toLowerCase().includes(q) || s.url.toLowerCase().includes(q)
+    );
+    renderSources(filtered);
+  });
+}
+
+function initCitationJump(){
+  document.addEventListener('click', (e)=>{
+    const cite = e.target.closest('.cite');
+    if(!cite) return;
+    const nums = cite.getAttribute('data-n').split(',').map(s=>s.trim());
+    const panel = document.getElementById('sourcesPanel');
+    const body = document.getElementById('sourcesBody');
+    if(!panel.classList.contains('open')){
+      body.style.maxHeight = body.scrollHeight + 200 + 'px';
+      panel.classList.add('open');
+    }
+    document.getElementById('srcSearch').value = '';
+    renderSources(sources);
+    setTimeout(()=>{
+      const first = document.getElementById('src-' + nums[0]);
+      if(first){
+        first.scrollIntoView({behavior:'smooth', block:'center'});
+        nums.forEach(n=>{
+          const li = document.getElementById('src-' + n);
+          if(li){
+            li.classList.add('highlight');
+            setTimeout(()=>li.classList.remove('highlight'), 1800);
+          }
+        });
+      }
+    }, 120);
+  });
+}
+
+/* ===================== BOOT ===================== */
+function boot(){
+  renderRanking();
+  renderTable();
+  renderSources(sources);
+  renderMethod();
+  initCollapsibles();
+  initSourceSearch();
+  initCitationJump();
+
+  setTimeout(()=>{
+    document.getElementById('loadingState').style.display = 'none';
+    const content = document.getElementById('appContent');
+    content.classList.add('show');
+  }, 650);
+}
+
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+</script>
+</body>
+</html>
