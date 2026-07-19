@@ -116,25 +116,25 @@ The complete application is available as a standalone HTML file.
 
 ### Prompt Builder
 
-![Prompt Builder](prompt-builder.png)
+![Prompt Builder](https://github.com/reemaz01/60-day-claude-ai/blob/9c4595c68a88fff9e6f2c4ee656ba4ebb445cc69/Day49/prompt%20builder.png)
 
 ---
 
 ### Loop Builder
 
-![Loop Builder](loop-builder.png)
+![Loop Builder](https://github.com/reemaz01/60-day-claude-ai/blob/9c4595c68a88fff9e6f2c4ee656ba4ebb445cc69/Day49/loopbuilder.png)
 
 ---
 
 ### Build & Code Library
 
-![Build & Code Library](build-code.png)
+![Build & Code Library](https://github.com/reemaz01/60-day-claude-ai/blob/9c4595c68a88fff9e6f2c4ee656ba4ebb445cc69/Day49/build%20n%20code.png)
 
 ---
 
 ### Startup & Strategy Library
 
-![Startup & Strategy Library](startup-strategy.png)
+![Startup & Strategy Library](https://github.com/reemaz01/60-day-claude-ai/blob/9c4595c68a88fff9e6f2c4ee656ba4ebb445cc69/Day49/startup%20n%20strategy.png)
 
 ---
 
