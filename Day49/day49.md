@@ -110,37 +110,37 @@ The complete application is available as a standalone HTML file.
 
 ### Dashboard
 
-![Dashboard](screenshots/dashboard.png)
+![Dashboard](dashboard.png)
 
 ---
 
 ### Prompt Builder
 
-![Prompt Builder](screenshots/prompt-builder.png)
+![Prompt Builder](prompt-builder.png)
 
 ---
 
 ### Loop Builder
 
-![Loop Builder](screenshots/loop-builder.png)
+![Loop Builder](loop-builder.png)
 
 ---
 
 ### Build & Code Library
 
-![Build & Code Library](screenshots/build-code.png)
+![Build & Code Library](build-code.png)
 
 ---
 
 ### Startup & Strategy Library
 
-![Startup & Strategy Library](screenshots/startup-strategy.png)
+![Startup & Strategy Library](startup-strategy.png)
 
 ---
 
 ### Build-in-Public Content Library
 
-![Build-in-Public Content](screenshots/build-public.png)
+![Build-in-Public Content](build-public.png)
 
 ---
 
