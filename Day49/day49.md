@@ -140,7 +140,7 @@ The complete application is available as a standalone HTML file.
 
 ### Build-in-Public Content Library
 
-![Build-in-Public Content](build-public.png)
+![Build-in-Public Content](https://github.com/reemaz01/60-day-claude-ai/blob/454b1559b504301dd9ff8f36612a036e4819dbe1/Day49/build%20in%20public%20content.png)
 
 ---
 
