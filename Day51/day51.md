@@ -36,6 +36,8 @@ Finalized the project scope, including:
 - Pull Request description
 - Documentation updates
 
+![Summary](Summary.jpeg)
+
 ---
 
 ## 3. Product Requirements Document (PRD)
