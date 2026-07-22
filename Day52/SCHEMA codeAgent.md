@@ -1,4 +1,4 @@
-# SCHEMA.md — CodePilot Agent
+# SCHEMA.md — CodeAgent
 
 *Day 2 deliverable — data model design.*
 
