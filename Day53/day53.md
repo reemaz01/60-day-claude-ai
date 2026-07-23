@@ -44,7 +44,7 @@ Verified:
 
 See:
 
-- `SETUP.md`
+[SETUP.md](SETUP.md)
 
 Contents include:
 
@@ -62,7 +62,7 @@ Contents include:
 
 See:
 
-- `PROJECT-STRUCTURE.md`
+[PROJECT-STRUCTURE.md](PROJECT-STRUCTURE.md)
 
 Documents:
 
@@ -80,7 +80,7 @@ Documents:
 
 See:
 
-- `ENVIRONMENT.md`
+[ENVIRONMENT.md](ENVIRONMENT.md)
 
 Documents:
 
@@ -97,7 +97,7 @@ Documents:
 
 See:
 
-- `DAY3-SUMMARY.md`
+[DAY3-SUMMARY.md](DAY3-SUMMARY.md)
 
 Summary includes:
 
