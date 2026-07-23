@@ -1,3 +1,4 @@
+
 # Autonomous Coding Agent – Documentation
 
 ## Overview
@@ -55,6 +56,8 @@ Prepared a comprehensive PRD covering:
 - MVP Scope
 - Success Metrics
 
+[PRD.docx](PRD.docx)
+
 ---
 
 ## 4. Implementation Blueprint
@@ -70,6 +73,8 @@ Created a detailed implementation roadmap including:
 - Self-review workflow
 - Testing strategy
 - Deployment checklist
+
+[Implementation_Blueprint.docx](Implementation_Blueprint.docx)
 
 ---
 
@@ -87,6 +92,8 @@ Designed a presentation containing:
 - Business Value
 - Future Enhancements
 - Demo Strategy
+
+[Pitch_Deck.pptx](Pitch_Deck.pptx)
 
 ---
 
