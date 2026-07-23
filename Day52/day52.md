@@ -83,6 +83,49 @@ The architecture is documented with Mermaid diagrams inside [ARCHITECTURE.md](AR
 
 ---
 
+
+## 🗄️ SCHEMA.md
+
+**Purpose**
+
+Defines the complete data model for the application.
+
+> **Note:** The PRD explicitly requires **no persistent database**. Instead, the application uses an in-memory session model for temporary state management. :contentReference[oaicite:0]{index=0}
+
+**Contents**
+
+- SessionState structure
+- File tree model
+- Dependency graph
+- Planning model
+- Review model
+- Validation rules
+- Data constraints
+- User story validation
+
+[SCHEMA.md](SCHEMA.md)
+
+---
+
+## 🎨 UI-WIREFRAMES.md
+
+**Purpose**
+
+Describes the application's user interface and navigation before implementation.
+
+**Contents**
+
+- User journey
+- Screen flow
+- Navigation
+- Low-fidelity wireframes
+- User interactions
+- UX decisions
+
+[UI-WIREFRAMES.md](UI-WIREFRAMES.md)
+
+---
+
 ## Data Model
 
 Unlike traditional applications, CodePilot Agent intentionally **does not use a database**.
@@ -120,6 +163,8 @@ Each endpoint specifies:
 * Authentication requirements
 * Error responses
 
+[API.md](API.md)
+
 ---
 
 ## Project Structure
@@ -137,7 +182,27 @@ The repository follows a modular architecture separating:
 
 This structure is designed for scalability and ease of maintenance.
 
+[PROJECT-STRUCTURE.md](PROJECT-STRUCTURE.md)
+
 ---
+
+
+## 📝 IMPLEMENTATION-BLUEPRINT.md
+
+**Purpose**
+
+Provides the updated implementation roadmap after completing the system design phase.
+
+**Contents**
+
+- Day-by-day development plan
+- Updated milestones
+- Scope validation
+- Risk assessment
+- Implementation sequence
+- Development checklist
+---
+
 
 ## Day 52 Deliverables
 
