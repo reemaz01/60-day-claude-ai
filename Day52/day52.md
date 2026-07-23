@@ -79,7 +79,7 @@ No production code is implemented in this phase.
 * Review and documentation modules
 * Export services
 
-The architecture is documented with Mermaid diagrams inside `ARCHITECTURE.md`.
+The architecture is documented with Mermaid diagrams inside [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ---
 
