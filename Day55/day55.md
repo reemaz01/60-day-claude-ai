@@ -5,7 +5,7 @@
 **Project Name:** Autonomous Coding Agent
 
 **Project Repository:**
-https://github.com/yourusername/autonomous-coding-agent
+https://github.com/reemaz01/codeAgent
 
 **Day:** 5 / 10
 
@@ -218,7 +218,7 @@ Remaining:
 
 ## Project Repository
 
-https://github.com/yourusername/autonomous-coding-agent
+https://github.com/reemaz01/codeAgent
 
 ## ABTalks Repository
 
@@ -236,7 +236,7 @@ along with today's screenshots and commit.
 
 **Project Repo**
 
-https://github.com/yourusername/autonomous-coding-agent
+https://github.com/reemaz01/codeAgent
 
 **ABTalks Repo Commit**
 
