@@ -8,14 +8,14 @@
 `https://github.com/reemaz01/codeAgent`
 
 **Day 8 Commit:**
-`https://github.com/<your-username>/<your-project>/commit/<commit-hash>`
+`https://github.com/reemaz01/60-day-claude-ai/commit/8c3139e88ce029a0c104b52cfb10eb373cac432e`
 
 ---
 
 ## ABTalks Repository
 
 **DAY8-SUMMARY.md Commit:**
-`https://github.com/reemaz01/60-day-claude-ai/commit/<commit-hash>`
+`https://github.com/reemaz01/60-day-claude-ai/commit/8c3139e88ce029a0c104b52cfb10eb373cac432e`
 
 ---
 
