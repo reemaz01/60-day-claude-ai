@@ -21,7 +21,7 @@ GitHub Release:
 
 Repository Commit:
 
-https://github.com/<your-username>/<abtalks-repository>/commit/<commit-hash>
+<https://github.com/reemaz01/60-day-claude-ai/commit/6d4cb97c78c89de4583697acdb1bcd1d37831f4e>
 
 ---
 
