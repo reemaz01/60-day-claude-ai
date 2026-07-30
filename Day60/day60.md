@@ -10,7 +10,7 @@ Live Application:
 <https://codeagent-backend.onrender.com>
 
 Version Released:
-v1.0.0
+v1.0.0 <https://github.com/reemaz01/codeAgent/releases/tag/v1.0.0>
 
 GitHub Release:
 <https://github.com/reemaz01/codeAgent/releases/tag/v1.0.0>
